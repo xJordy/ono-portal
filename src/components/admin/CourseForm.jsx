@@ -65,7 +65,7 @@ const CourseForm = ({ onSave, courseToEdit }) => {
   return (
     <Paper sx={{ p: 2, mb: 3 }}>
       <Typography variant="h6" gutterBottom>
-        {courseToEdit ? 'עריכת קורס' : 'הוספת קורס חדש'}
+        {courseToEdit ? 'עריכת קורס' : 'מלא את פרטי הקורס'}
       </Typography>
       
       <Box component="form" onSubmit={handleSubmit}>

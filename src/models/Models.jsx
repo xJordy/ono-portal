@@ -46,9 +46,9 @@ export class Course {
     this.day = day;
     this.time = time;
     this.descr = descr;
-    this.assignments = [];
-    this.messages = [];
-    this.students = [];
+    this.assignments = /** @type {Assignment[]} */ ([]);
+    this.messages = /** @type {Message[]} */ ([]);
+    this.students = /** @type {Student[]} */ ([]);
   }
 
   addAssignment(assignment) {

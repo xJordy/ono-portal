@@ -23,7 +23,7 @@ export default function AdminPortal() {
 
     if (savedCourses && savedCourses.length > 0) {
       const coursesInstances = savedCourses.map(course => {
-        const newCourse = new Course(course.id, course.name, course.instructor);
+        const newCourse = new Course(course.id, course.name, course.instructor, course.day, course.time, course.descr);
 
         // Restore other properties if they exist
         if (course.assignments) newCourse.assignments = course.assignments;
@@ -129,7 +129,7 @@ export default function AdminPortal() {
   };
 
   return (
-    <Container maxWidth="false" sx={{ mt: 4, mx: -25 }}>
+    <Container maxWidth="false" sx={{ mt: 4, mx: -5 }}>
       <Typography variant="h4" gutterBottom>
         פורטל מנהל
       </Typography>
