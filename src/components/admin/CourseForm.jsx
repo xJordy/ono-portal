@@ -1,21 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Button, TextField, Typography, Paper } from '@mui/material';
+import { Box, Button, TextField, Typography, Paper, MenuItem } from '@mui/material';
 import { Course } from '../../models/Models';
 
 const CourseForm = ({ onSave, courseToEdit }) => {
   // Simple state to store form data
   const [name, setName] = useState('');
   const [instructor, setInstructor] = useState('');
+  const [day, setDay] = useState('');
+  const [time, setTime] = useState('');
+  const [descr, setDescr] = useState('');
   
   // Update form when editing a course
   useEffect(() => {
     if (courseToEdit) {
       setName(courseToEdit.name);
       setInstructor(courseToEdit.instructor);
+      setDay(courseToEdit.day);
+      setTime(courseToEdit.time);
+      setDescr(courseToEdit.descr);
     } else {
       // Reset form when not editing
       setName('');
       setInstructor('');
+      setDay('');
+      setTime('');
+      setDescr('');
     }
   }, [courseToEdit]);
 
@@ -26,13 +35,19 @@ const CourseForm = ({ onSave, courseToEdit }) => {
       // If editing, update the existing course
       courseToEdit.name = name;
       courseToEdit.instructor = instructor;
+      courseToEdit.day = day;
+      courseToEdit.time = time;
+      courseToEdit.descr = descr;
       onSave(courseToEdit);
     } else {
       // If adding, create a new course
       const newCourse = new Course(
         Date.now().toString(), // Simple ID
         name,
-        instructor
+        instructor,
+        day,
+        time,
+        descr
       );
       onSave(newCourse);
     }
@@ -41,6 +56,9 @@ const CourseForm = ({ onSave, courseToEdit }) => {
     if (!courseToEdit) {
       setName('');
       setInstructor('');
+      setDay('');
+      setTime('');
+      setDescr('');
     }
   };
 
@@ -67,6 +85,43 @@ const CourseForm = ({ onSave, courseToEdit }) => {
           value={instructor}
           onChange={(e) => setInstructor(e.target.value)}
           required
+        />
+
+        <TextField
+          select
+          fullWidth
+          margin="normal"
+          label="יום"
+          value={day}
+          onChange={(e) => setDay(e.target.value)}
+          required
+        >
+          <MenuItem value="יום א׳">ראשון</MenuItem>
+          <MenuItem value="יום ב׳">שני</MenuItem>
+          <MenuItem value="יום ג׳">שלישי</MenuItem>
+          <MenuItem value="יום ד׳">רביעי</MenuItem>
+          <MenuItem value="יום ה׳">חמישי</MenuItem>
+        </TextField>
+
+        <TextField
+          fullWidth
+          type='time'
+          margin="normal"
+          label="שעה"
+          value={time}
+          onChange={(e) => setTime(e.target.value)}
+          required
+        />
+
+        <TextField
+          fullWidth
+          margin="normal"
+          label="תיאור"
+          value={descr}
+          onChange={(e) => setDescr(e.target.value)}
+          multiline
+          rows={4}
+          variant="outlined"
         />
         
         <Button 

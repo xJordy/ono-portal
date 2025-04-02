@@ -39,10 +39,13 @@ export class Message {
 
 // Simple Course model
 export class Course {
-  constructor(id, name, instructor) {
+  constructor(id, name, instructor, day, time, descr) {
     this.id = id;
     this.name = name;
     this.instructor = instructor;
+    this.day = day;
+    this.time = time;
+    this.descr = descr;
     this.assignments = [];
     this.messages = [];
     this.students = [];

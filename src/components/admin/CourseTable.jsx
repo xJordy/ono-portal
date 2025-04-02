@@ -17,8 +17,10 @@ const CourseTable = ({ courses, onEdit, onDelete }) => {
       <Table>
         <TableHead>
           <TableRow>
+            <TableCell>קוד קורס</TableCell>
             <TableCell>שם הקורס</TableCell>
             <TableCell>מרצה</TableCell>
+            <TableCell>יום ושעה</TableCell>
             <TableCell>פעולות</TableCell>
           </TableRow>
         </TableHead>
@@ -32,8 +34,10 @@ const CourseTable = ({ courses, onEdit, onDelete }) => {
           ) : (
             courses.map((course) => (
               <TableRow key={course.id}>
+                <TableCell>{course.id}</TableCell>
                 <TableCell>{course.name}</TableCell>
                 <TableCell>{course.instructor}</TableCell>
+                <TableCell>{course.day} {course.time}</TableCell>
                 <TableCell>
                   <Button 
                     variant="outlined" 

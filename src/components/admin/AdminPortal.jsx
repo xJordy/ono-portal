@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Box, Typography, Container, Grid } from '@mui/material';
 import CourseForm from './CourseForm';
 import CourseTable from './CourseTable';
@@ -13,18 +13,38 @@ export default function AdminPortal() {
   const [courseToEdit, setCourseToEdit] = useState(null);
   // State for navigation
   const [currentPage, setCurrentPage] = useState('dashboard');
+  // Ref to track initialization
+  const isFirstRenderRef = useRef(true);
 
   // Load courses from localStorage when component mounts
   useEffect(() => {
     const savedCourses = getCoursesFromLocalStorage();
-    const coursesInstances = savedCourses.map(course => 
-      new Course(course.id, course.name, course.instructor)
-    );
-    setCourses(coursesInstances);
+    console.log('Loading courses from localStorage:', savedCourses);
+
+    if (savedCourses && savedCourses.length > 0) {
+      const coursesInstances = savedCourses.map(course => {
+        const newCourse = new Course(course.id, course.name, course.instructor);
+
+        // Restore other properties if they exist
+        if (course.assignments) newCourse.assignments = course.assignments;
+        if (course.messages) newCourse.messages = course.messages;
+        if (course.students) newCourse.students = course.students;
+
+        return newCourse;
+      });
+      setCourses(coursesInstances);
+    }
   }, []);
 
   // Save courses to localStorage when they change
   useEffect(() => {
+    // Skip the first render completely
+    if (isFirstRenderRef.current) {
+      isFirstRenderRef.current = false;
+      return;
+    }
+
+    console.log('Saving courses after first render:', courses);
     saveCoursesToLocalStorage(courses);
   }, [courses]);
 
@@ -109,14 +129,14 @@ export default function AdminPortal() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4 }}>
+    <Container maxWidth="false" sx={{ mt: 4, mx: -25 }}>
       <Typography variant="h4" gutterBottom>
         פורטל מנהל
       </Typography>
       
       <Grid container spacing={3}>
         {/* Sidebar */}
-        <Grid item xs={12} md={3}>
+        <Grid>
           <Sidebar 
             onNavigate={handleNavigate}
             currentPage={currentPage}
@@ -124,7 +144,7 @@ export default function AdminPortal() {
         </Grid>
         
         {/* Main content */}
-        <Grid item xs={12} md={9}>
+        <Grid>
           {renderContent()}
         </Grid>
       </Grid>
