@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Box, Typography, Container, Grid } from '@mui/material';
 import CourseForm from './CourseForm';
 import CourseTable from './CourseTable';
+import ManageCourse from './ManageCourse';
 import Sidebar from './Sidebar';
 import { Course } from '../../models/Models';
 import { saveCoursesToLocalStorage, getCoursesFromLocalStorage } from '../../utils/localStorage';
@@ -11,6 +12,8 @@ export default function AdminPortal() {
   const [courses, setCourses] = useState([]);
   // State to track which course is being edited
   const [courseToEdit, setCourseToEdit] = useState(null);
+  // State to track which course is being managed
+  const [selectedCourse, setSelectedCourse] = useState(null);
   // State for navigation
   const [currentPage, setCurrentPage] = useState('dashboard');
   // Ref to track initialization
@@ -70,6 +73,12 @@ export default function AdminPortal() {
     setCurrentPage('addCourse');
   };
 
+  // Function to manage a course
+  const handleManageCourse = (course) => {
+    setSelectedCourse(course);
+    setCurrentPage('manageCourse');
+  };
+
   // Function to delete a course
   const handleDeleteCourse = (courseId) => {
     setCourses(prev => prev.filter(course => course.id !== courseId));
@@ -107,7 +116,8 @@ export default function AdminPortal() {
             <CourseTable 
               courses={courses} 
               onEdit={handleEditCourse} 
-              onDelete={handleDeleteCourse} 
+              onDelete={handleDeleteCourse}
+              onManage={handleManageCourse}
             />
           </Box>
         );
@@ -120,6 +130,15 @@ export default function AdminPortal() {
             <CourseForm 
               onSave={handleSaveCourse} 
               courseToEdit={courseToEdit} 
+            />
+          </Box>
+        );
+      case 'manageCourse':
+        return (
+          <Box>
+            <ManageCourse 
+              course={selectedCourse} 
+              onBack={() => setCurrentPage('courses')} 
             />
           </Box>
         );

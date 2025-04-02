@@ -10,11 +10,10 @@ import {
   Button 
 } from '@mui/material';
 
-const CourseTable = ({ courses, onEdit, onDelete }) => {
-  // Simple table to display courses
+const CourseTable = ({ courses, onEdit, onDelete, onManage }) => {
   return (
-<TableContainer component={Paper}>
-<Table sx={{ width: '100%' }}>
+    <TableContainer component={Paper}>
+      <Table sx={{ width: '100%' }}>
         <TableHead>
           <TableRow>
             <TableCell>קוד קורס</TableCell>
@@ -27,7 +26,7 @@ const CourseTable = ({ courses, onEdit, onDelete }) => {
         <TableBody>
           {courses.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={3} align="center">
+              <TableCell colSpan={5} align="center">
                 אין קורסים עדיין. הוסף את הקורס הראשון בתפריט בצד ימין!
               </TableCell>
             </TableRow>
@@ -41,9 +40,17 @@ const CourseTable = ({ courses, onEdit, onDelete }) => {
                 <TableCell>
                   <Button 
                     variant="outlined" 
+                    color="primary" 
+                    size="small" 
+                    onClick={() => onManage(course)}
+                  >
+                    ניהול
+                  </Button>
+                  <Button 
+                    variant="outlined" 
                     size="small" 
                     onClick={() => onEdit(course)}
-                    sx={{ ml: 1 }} // Changed from mr to ml for RTL
+                    sx={{ ml: 1 }}
                   >
                     עריכה
                   </Button>
@@ -52,6 +59,7 @@ const CourseTable = ({ courses, onEdit, onDelete }) => {
                     color="error" 
                     size="small" 
                     onClick={() => onDelete(course.id)}
+                    sx={{ ml: 1 }}
                   >
                     מחיקה
                   </Button>

@@ -10,3 +10,14 @@ export const getCoursesFromLocalStorage = () => {
 export const clearCoursesFromLocalStorage = () => {
   localStorage.removeItem('courses');
 };
+
+export const saveCourseToLocalStorage = (course) => {
+  const courses = getCoursesFromLocalStorage();
+  const updatedCourses = courses.map(c => c.id === course.id ? course : c);
+  saveCoursesToLocalStorage(updatedCourses);
+};
+
+export const getCourseFromLocalStorage = (courseId) => {
+  const courses = getCoursesFromLocalStorage();
+  return courses.find(course => course.id === courseId);
+};
