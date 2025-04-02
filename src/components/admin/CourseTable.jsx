@@ -13,8 +13,8 @@ import {
 const CourseTable = ({ courses, onEdit, onDelete }) => {
   // Simple table to display courses
   return (
-    <TableContainer component={Paper}>
-      <Table>
+<TableContainer component={Paper}>
+<Table sx={{ width: '100%' }}>
         <TableHead>
           <TableRow>
             <TableCell>קוד קורס</TableCell>

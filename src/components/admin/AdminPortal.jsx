@@ -129,12 +129,12 @@ export default function AdminPortal() {
   };
 
   return (
-    <Container maxWidth="false" sx={{ mt: 4, mx: -5 }}>
+    <Container sx={{ mt: 4, mx: -5 }}>
       <Typography variant="h4" gutterBottom>
         פורטל מנהל
       </Typography>
       
-      <Grid container spacing={3}>
+      <Grid container spacing={8}>
         {/* Sidebar */}
         <Grid>
           <Sidebar 
@@ -144,7 +144,7 @@ export default function AdminPortal() {
         </Grid>
         
         {/* Main content */}
-        <Grid>
+        <Grid sx={{ flexGrow: 1, mx: -5 }}>
           {renderContent()}
         </Grid>
       </Grid>
