@@ -1,26 +1,38 @@
-import React from 'react';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow, 
-  Paper, 
-  Button 
-} from '@mui/material';
+import React from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Button,
+} from "@mui/material";
 
-const CourseTable = ({ courses, onEdit, onDelete, onManage }) => {
+const CourseTable = ({
+  courses,
+  onEdit,
+  onDelete,
+  onManage,
+  tableProps,
+  columnWidths = {},
+}) => {
   return (
     <TableContainer component={Paper}>
-      <Table sx={{ width: '100%' }}>
+      <Table sx={{ width: "100%", ...(tableProps?.sx || {}) }}>
         <TableHead>
           <TableRow>
-            <TableCell>קוד קורס</TableCell>
-            <TableCell>שם הקורס</TableCell>
-            <TableCell>מרצה</TableCell>
-            <TableCell>יום ושעה</TableCell>
-            <TableCell>פעולות</TableCell>
+            <TableCell width={columnWidths.id}>קוד קורס</TableCell>
+            <TableCell
+              width={columnWidths.name}
+              sx={{ whiteSpace: "normal", wordWrap: "break-word" }}
+            >
+              שם הקורס
+            </TableCell>
+            <TableCell width={columnWidths.instructor}>מרצה</TableCell>
+            <TableCell width={columnWidths.schedule}>יום ושעה</TableCell>
+            <TableCell width={columnWidths.actions}>פעולות</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -34,30 +46,37 @@ const CourseTable = ({ courses, onEdit, onDelete, onManage }) => {
             courses.map((course) => (
               <TableRow key={course.id}>
                 <TableCell>{course.id}</TableCell>
-                <TableCell>{course.name}</TableCell>
+                <TableCell
+                  sx={{ whiteSpace: "normal", wordWrap: "break-word" }}
+                >
+                  {course.name}
+                </TableCell>
+                {/* No whitespace between cells */}
                 <TableCell>{course.instructor}</TableCell>
-                <TableCell>{course.day} {course.time}</TableCell>
                 <TableCell>
-                  <Button 
-                    variant="outlined" 
-                    color="primary" 
-                    size="small" 
+                  {course.day} {course.time}
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    size="small"
                     onClick={() => onManage(course)}
                   >
                     ניהול
                   </Button>
-                  <Button 
-                    variant="outlined" 
-                    size="small" 
+                  <Button
+                    variant="outlined"
+                    size="small"
                     onClick={() => onEdit(course)}
                     sx={{ ml: 1 }}
                   >
                     עריכה
                   </Button>
-                  <Button 
-                    variant="outlined" 
-                    color="error" 
-                    size="small" 
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    size="small"
                     onClick={() => onDelete(course.id)}
                     sx={{ ml: 1 }}
                   >

@@ -6,11 +6,11 @@ import App from './App.jsx'
 import { RTL } from './theme/rtlSetup'
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
+  // <StrictMode>
     <RTL>
       <BrowserRouter>
         <App />
       </BrowserRouter>
     </RTL>
-  </StrictMode>,
+  // </StrictMode>,
 )

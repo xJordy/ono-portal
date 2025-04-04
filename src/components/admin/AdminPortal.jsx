@@ -1,11 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Box, Typography, Container, Grid } from '@mui/material';
-import CourseForm from './CourseForm';
-import CourseTable from './CourseTable';
-import ManageCourse from './ManageCourse';
-import Sidebar from './Sidebar';
-import { Course } from '../../models/Models';
-import { saveCoursesToLocalStorage, getCoursesFromLocalStorage } from '../../utils/localStorage';
+import React, { useState, useEffect, useRef } from "react";
+import { Box, Typography, Container, Grid } from "@mui/material";
+import CourseForm from "./CourseForm";
+import CourseTable from "./CourseTable";
+import ManageCourse from "./ManageCourse";
+import Sidebar from "./Sidebar";
+import { Course } from "../../models/Models";
+import {
+  saveCoursesToLocalStorage,
+  getCoursesFromLocalStorage,
+} from "../../utils/localStorage";
 
 export default function AdminPortal() {
   // State to store all courses
@@ -15,18 +18,25 @@ export default function AdminPortal() {
   // State to track which course is being managed
   const [selectedCourse, setSelectedCourse] = useState(null);
   // State for navigation
-  const [currentPage, setCurrentPage] = useState('dashboard');
+  const [currentPage, setCurrentPage] = useState("dashboard");
   // Ref to track initialization
   const isFirstRenderRef = useRef(true);
 
   // Load courses from localStorage when component mounts
   useEffect(() => {
     const savedCourses = getCoursesFromLocalStorage();
-    console.log('Loading courses from localStorage:', savedCourses);
+    console.log("Loading courses from localStorage:", savedCourses);
 
     if (savedCourses && savedCourses.length > 0) {
-      const coursesInstances = savedCourses.map(course => {
-        const newCourse = new Course(course.id, course.name, course.instructor, course.day, course.time, course.descr);
+      const coursesInstances = savedCourses.map((course) => {
+        const newCourse = new Course(
+          course.id,
+          course.name,
+          course.instructor,
+          course.day,
+          course.time,
+          course.descr
+        );
 
         // Restore other properties if they exist
         if (course.assignments) newCourse.assignments = course.assignments;
@@ -47,7 +57,7 @@ export default function AdminPortal() {
       return;
     }
 
-    console.log('Saving courses after first render:', courses);
+    console.log("Saving courses after first render:", courses);
     saveCoursesToLocalStorage(courses);
   }, [courses]);
 
@@ -55,48 +65,46 @@ export default function AdminPortal() {
   const handleSaveCourse = (course) => {
     if (courseToEdit) {
       // Update existing course
-      setCourses(prev => 
-        prev.map(c => c.id === course.id ? course : c)
-      );
+      setCourses((prev) => prev.map((c) => (c.id === course.id ? course : c)));
       setCourseToEdit(null);
     } else {
       // Add new course
-      setCourses(prev => [...prev, course]);
+      setCourses((prev) => [...prev, course]);
     }
     // Navigate to courses list after saving
-    setCurrentPage('courses');
+    setCurrentPage("courses");
   };
 
   // Function to start editing a course
   const handleEditCourse = (course) => {
     setCourseToEdit(course);
-    setCurrentPage('addCourse');
+    setCurrentPage("addCourse");
   };
 
   // Function to manage a course
   const handleManageCourse = (course) => {
     setSelectedCourse(course);
-    setCurrentPage('manageCourse');
+    setCurrentPage("manageCourse");
   };
 
   // Function to delete a course
   const handleDeleteCourse = (courseId) => {
-    setCourses(prev => prev.filter(course => course.id !== courseId));
+    setCourses((prev) => prev.filter((course) => course.id !== courseId));
   };
 
   // Handle navigation changes
   const handleNavigate = (pageId) => {
     setCurrentPage(pageId);
     // Reset courseToEdit when navigating to add course page
-    if (pageId === 'addCourse' && currentPage !== 'addCourse') {
+    if (pageId === "addCourse" && currentPage !== "addCourse") {
       setCourseToEdit(null);
     }
   };
 
   // Render the appropriate content based on current page
   const renderContent = () => {
-    switch(currentPage) {
-      case 'dashboard':
+    switch (currentPage) {
+      case "dashboard":
         return (
           <Box>
             <Typography variant="h5" gutterBottom>
@@ -107,38 +115,51 @@ export default function AdminPortal() {
             </Typography>
           </Box>
         );
-      case 'courses':
+      case "courses":
         return (
           <Box>
             <Typography variant="h5" gutterBottom>
               רשימת קורסים
             </Typography>
-            <CourseTable 
-              courses={courses} 
-              onEdit={handleEditCourse} 
-              onDelete={handleDeleteCourse}
-              onManage={handleManageCourse}
-            />
+            <Box
+              sx={{
+                width: "100%",
+              }}
+            >
+              <CourseTable
+                courses={courses}
+                onEdit={handleEditCourse}
+                onDelete={handleDeleteCourse}
+                onManage={handleManageCourse}
+                tableProps={{
+                  sx: { tableLayout: "fixed" }, // Forces table to respect column widths
+                }}
+                columnWidths={{
+                  id: "10%",
+                  name: "30%",
+                  instructor: "20%",
+                  schedule: "10%",
+                  actions: "30%",
+                }}
+              />
+            </Box>
           </Box>
         );
-      case 'addCourse':
+      case "addCourse":
         return (
           <Box>
             <Typography variant="h5" gutterBottom>
-              {courseToEdit ? 'עריכת קורס' : 'הוספת קורס חדש'}
+              {courseToEdit ? "עריכת קורס" : "הוספת קורס חדש"}
             </Typography>
-            <CourseForm 
-              onSave={handleSaveCourse} 
-              courseToEdit={courseToEdit} 
-            />
+            <CourseForm onSave={handleSaveCourse} courseToEdit={courseToEdit} />
           </Box>
         );
-      case 'manageCourse':
+      case "manageCourse":
         return (
           <Box>
-            <ManageCourse 
-              course={selectedCourse} 
-              onBack={() => setCurrentPage('courses')} 
+            <ManageCourse
+              course={selectedCourse}
+              onBack={() => setCurrentPage("courses")}
             />
           </Box>
         );
@@ -148,29 +169,26 @@ export default function AdminPortal() {
   };
 
   return (
-    <Box sx={{ width: '100%', maxWidth: '100%' }}>
+    <Box sx={{ width: "100%", maxWidth: "100%" }}>
       <Typography variant="h4" gutterBottom sx={{ p: 2 }}>
         פורטל מנהל
       </Typography>
-      
-      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' } }}>
+
+      <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" } }}>
         {/* Sidebar */}
-        <Box sx={{ 
-          width: { xs: '100%', sm: '250px' },
-          flexShrink: 0,
-          mb: { xs: 2, sm: 0 },
-          mr: { xs: 0, sm: 2 }
-        }}>
-          <Sidebar 
-            onNavigate={handleNavigate}
-            currentPage={currentPage}
-          />
+        <Box
+          sx={{
+            width: { xs: "100%", sm: "250px" },
+            flexShrink: 0,
+            mb: { xs: 2, sm: 0 },
+            mr: { xs: 0, sm: 2 },
+          }}
+        >
+          <Sidebar onNavigate={handleNavigate} currentPage={currentPage} />
         </Box>
-        
+
         {/* Main content */}
-        <Box sx={{ flexGrow: 1 }}>
-          {renderContent()}
-        </Box>
+        <Box sx={{ flexGrow: 1 }}>{renderContent()}</Box>
       </Box>
     </Box>
   );
