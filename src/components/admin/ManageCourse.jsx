@@ -166,7 +166,7 @@ const ManageCourse = ({ course, onBack }) => {
         חזרה לרשימת הקורסים
       </Button>
 
-      <Paper sx={{ mb: 3, p: 2, width: "120vh" }}>
+      <Paper sx={{ mb: 3, p: 2, width: "65vw" }}>
         <Typography variant="h4">{currentCourse.name}</Typography>
         <Box sx={{ display: "flex", mt: 2, gap: 4 }}>
           <Typography variant="subtitle1">
@@ -205,7 +205,7 @@ const ManageCourse = ({ course, onBack }) => {
           </Button>
         </Box>
 
-        <List elevation={2} sx={{ width: "120vh"}}>
+        <List elevation={2} sx={{ width: "65vw"}}>
           {currentCourse.assignments && currentCourse.assignments.length > 0 ? (
             currentCourse.assignments.map((assignment) => (
               <Paper key={assignment.id} sx={{ mb: 2, p: 2 }}>

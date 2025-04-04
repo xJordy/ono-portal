@@ -53,16 +53,53 @@ export class Course {
     this.students = /** @type {Student[]} */ ([]);
   }
 
+  // Assignment methods
   addAssignment(assignment) {
     this.assignments.push(assignment);
+    return this;
   }
 
+  removeAssignment(assignmentId) {
+    this.assignments = this.assignments.filter(a => a.id !== assignmentId);
+    return this;
+  }
+
+  updateAssignment(assignmentId, updates) {
+    const index = this.assignments.findIndex(a => a.id === assignmentId);
+    if (index !== -1) {
+      this.assignments[index] = { ...this.assignments[index], ...updates };
+    }
+    return this;
+  }
+
+  // Message methods
   addMessage(message) {
     this.messages.push(message);
+    return this;
+  }
+  
+  removeMessage(messageId) {
+    this.messages = this.messages.filter(m => m.id !== messageId);
+    return this;
   }
 
+  // Student methods
   enrollStudent(student) {
     this.students.push(student);
     student.enrollInCourse(this);
+    return this;
+  }
+  
+  removeStudent(studentId) {
+    this.students = this.students.filter(s => s.id !== studentId);
+    return this;
+  }
+  
+  updateStudent(studentId, updates) {
+    const index = this.students.findIndex(s => s.id === studentId);
+    if (index !== -1) {
+      this.students[index] = { ...this.students[index], ...updates };
+    }
+    return this;
   }
 }
