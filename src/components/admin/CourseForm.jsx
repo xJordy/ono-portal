@@ -94,7 +94,7 @@ const CourseForm = ({ onSave, courseToEdit }) => {
           required
         />
 
-        <Box sx={{ display: 'flex', gap: 2 }}>
+        <Box sx={{ display: "flex", gap: 2 }}>
           <TextField
             sx={{ input: { textAlign: "center" } }}
             select
