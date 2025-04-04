@@ -1,8 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Typography, Paper, Tabs, Tab, Button, TextField, List, IconButton, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import { Assignment, Message, Student } from '../../models/Models';
-import { saveCourseToLocalStorage } from '../../utils/localStorage';
+import React, { useState, useEffect } from "react";
+import {
+  Box,
+  Typography,
+  Paper,
+  Tabs,
+  Tab,
+  Button,
+  TextField,
+  List,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { Assignment, Message, Student } from "../../models/Models";
+import { saveCourseToLocalStorage } from "../../utils/localStorage";
 
 // TabPanel component for tab content
 function TabPanel(props) {
@@ -15,11 +29,7 @@ function TabPanel(props) {
       aria-labelledby={`course-tab-${index}`}
       {...other}
     >
-      {value === index && (
-        <Box sx={{ p: 3 }}>
-          {children}
-        </Box>
-      )}
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
     </div>
   );
 }
@@ -27,25 +37,25 @@ function TabPanel(props) {
 const ManageCourse = ({ course, onBack }) => {
   const [currentCourse, setCurrentCourse] = useState(course);
   const [tabValue, setTabValue] = useState(0);
-  
+
   // Form states
   const [newAssignment, setNewAssignment] = useState({
-    title: '',
-    description: '',
-    dueDate: ''
+    title: "",
+    description: "",
+    dueDate: "",
   });
-  
+
   const [newMessage, setNewMessage] = useState({
-    content: '',
-    sender: 'מנהל'
+    content: "",
+    sender: "מנהל",
   });
-  
+
   const [newStudent, setNewStudent] = useState({
-    firstName: '',
-    lastName: '',
-    email: ''
+    firstName: "",
+    lastName: "",
+    email: "",
   });
-  
+
   // Dialog states
   const [openAssignmentDialog, setOpenAssignmentDialog] = useState(false);
   const [openMessageDialog, setOpenMessageDialog] = useState(false);
@@ -55,14 +65,14 @@ const ManageCourse = ({ course, onBack }) => {
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
   };
-  
+
   // Save changes to localStorage whenever the course changes
   useEffect(() => {
     if (currentCourse) {
       saveCourseToLocalStorage(currentCourse);
     }
   }, [currentCourse]);
-  
+
   // Assignment handlers
   const handleAddAssignment = () => {
     const assignment = new Assignment(
@@ -71,25 +81,27 @@ const ManageCourse = ({ course, onBack }) => {
       newAssignment.description,
       newAssignment.dueDate
     );
-    
-    setCurrentCourse(prev => {
-      const updated = {...prev};
+
+    setCurrentCourse((prev) => {
+      const updated = { ...prev };
       updated.assignments = [...(prev.assignments || []), assignment];
       return updated;
     });
-    
-    setNewAssignment({ title: '', description: '', dueDate: '' });
+
+    setNewAssignment({ title: "", description: "", dueDate: "" });
     setOpenAssignmentDialog(false);
   };
-  
+
   const handleDeleteAssignment = (assignmentId) => {
-    setCurrentCourse(prev => {
-      const updated = {...prev};
-      updated.assignments = prev.assignments.filter(a => a.id !== assignmentId);
+    setCurrentCourse((prev) => {
+      const updated = { ...prev };
+      updated.assignments = prev.assignments.filter(
+        (a) => a.id !== assignmentId
+      );
       return updated;
     });
   };
-  
+
   // Message handlers
   const handleAddMessage = () => {
     const message = new Message(
@@ -98,25 +110,25 @@ const ManageCourse = ({ course, onBack }) => {
       newMessage.sender,
       new Date()
     );
-    
-    setCurrentCourse(prev => {
-      const updated = {...prev};
+
+    setCurrentCourse((prev) => {
+      const updated = { ...prev };
       updated.messages = [...(prev.messages || []), message];
       return updated;
     });
-    
-    setNewMessage({ content: '', sender: 'מנהל' });
+
+    setNewMessage({ content: "", sender: "מנהל" });
     setOpenMessageDialog(false);
   };
-  
+
   const handleDeleteMessage = (messageId) => {
-    setCurrentCourse(prev => {
-      const updated = {...prev};
-      updated.messages = prev.messages.filter(m => m.id !== messageId);
+    setCurrentCourse((prev) => {
+      const updated = { ...prev };
+      updated.messages = prev.messages.filter((m) => m.id !== messageId);
       return updated;
     });
   };
-  
+
   // Student handlers
   const handleAddStudent = () => {
     const student = new Student(
@@ -125,23 +137,23 @@ const ManageCourse = ({ course, onBack }) => {
       newStudent.lastName,
       newStudent.email
     );
-    
-    setCurrentCourse(prev => {
-      const updated = {...prev};
+
+    setCurrentCourse((prev) => {
+      const updated = { ...prev };
       updated.students = [...(prev.students || []), student];
       // Also enroll the student in the course
       student.enrollInCourse(updated);
       return updated;
     });
-    
-    setNewStudent({ firstName: '', lastName: '', email: '' });
+
+    setNewStudent({ firstName: "", lastName: "", email: "" });
     setOpenStudentDialog(false);
   };
-  
+
   const handleDeleteStudent = (studentId) => {
-    setCurrentCourse(prev => {
-      const updated = {...prev};
-      updated.students = prev.students.filter(s => s.id !== studentId);
+    setCurrentCourse((prev) => {
+      const updated = { ...prev };
+      updated.students = prev.students.filter((s) => s.id !== studentId);
       return updated;
     });
   };
@@ -153,41 +165,65 @@ const ManageCourse = ({ course, onBack }) => {
       <Button variant="outlined" onClick={onBack} sx={{ mb: 2 }}>
         חזרה לרשימת הקורסים
       </Button>
-      
-      <Paper elevation={2} sx={{ mb: 3, p: 2 }}>
+
+      <Paper sx={{ mb: 3, p: 2, width: "120vh" }}>
         <Typography variant="h4">{currentCourse.name}</Typography>
-        <Typography variant="subtitle1">מרצה: {currentCourse.instructor}</Typography>
-        <Typography variant="subtitle2">{currentCourse.day} {currentCourse.time}</Typography>
-        <Typography variant="body1" sx={{ mt: 2 }}>{currentCourse.descr}</Typography>
+        <Box sx={{ display: "flex", mt: 2, gap: 4 }}>
+          <Typography variant="subtitle1">
+            מרצה: {currentCourse.instructor}
+          </Typography>
+          <Typography variant="subtitle2" sx={{ mt: 0.5 }}>
+            {currentCourse.day} {currentCourse.time}
+          </Typography>
+        </Box>{" "}
+        <Typography variant="body1" sx={{ mt: 2 }}>
+          {currentCourse.descr}
+        </Typography>
       </Paper>
-      
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs value={tabValue} onChange={handleTabChange} aria-label="course management tabs">
+
+      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+        <Tabs
+          value={tabValue}
+          onChange={handleTabChange}
+          aria-label="course management tabs"
+        >
           <Tab label="מטלות" />
           <Tab label="הודעות" />
           <Tab label="סטודנטים" />
         </Tabs>
       </Box>
-      
+
       {/* Assignments Tab */}
       <TabPanel value={tabValue} index={0}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
           <Typography variant="h6">רשימת מטלות</Typography>
-          <Button variant="contained" onClick={() => setOpenAssignmentDialog(true)}>הוסף מטלה</Button>
+          <Button
+            variant="contained"
+            onClick={() => setOpenAssignmentDialog(true)}
+          >
+            הוסף מטלה
+          </Button>
         </Box>
-        
-        <List>
+
+        <List elevation={2} sx={{ width: "120vh"}}>
           {currentCourse.assignments && currentCourse.assignments.length > 0 ? (
-            currentCourse.assignments.map(assignment => (
+            currentCourse.assignments.map((assignment) => (
               <Paper key={assignment.id} sx={{ mb: 2, p: 2 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                   <Typography variant="h6">{assignment.title}</Typography>
-                  <IconButton onClick={() => handleDeleteAssignment(assignment.id)} color="error">
+                  <IconButton
+                    onClick={() => handleDeleteAssignment(assignment.id)}
+                    color="error"
+                  >
                     <DeleteIcon />
                   </IconButton>
                 </Box>
-                <Typography variant="body2">תאריך הגשה: {assignment.dueDate}</Typography>
-                <Typography variant="body1">{assignment.description}</Typography>
+                <Typography variant="body2" sx={{ mb: 1 }}>
+                  תאריך הגשה: {assignment.dueDate}
+                </Typography>
+                <Typography variant="body1">
+                  {assignment.description}
+                </Typography>
               </Paper>
             ))
           ) : (
@@ -195,23 +231,32 @@ const ManageCourse = ({ course, onBack }) => {
           )}
         </List>
       </TabPanel>
-      
+
       {/* Messages Tab */}
       <TabPanel value={tabValue} index={1}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
           <Typography variant="h6">הודעות הקורס</Typography>
-          <Button variant="contained" onClick={() => setOpenMessageDialog(true)}>הוסף הודעה</Button>
+          <Button
+            variant="contained"
+            onClick={() => setOpenMessageDialog(true)}
+          >
+            הוסף הודעה
+          </Button>
         </Box>
-        
+
         <List>
           {currentCourse.messages && currentCourse.messages.length > 0 ? (
-            currentCourse.messages.map(message => (
+            currentCourse.messages.map((message) => (
               <Paper key={message.id} sx={{ mb: 2, p: 2 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                   <Typography variant="subtitle2">
-                    {message.sender} - {new Date(message.timestamp).toLocaleString()}
+                    {message.sender} -{" "}
+                    {new Date(message.timestamp).toLocaleString()}
                   </Typography>
-                  <IconButton onClick={() => handleDeleteMessage(message.id)} color="error">
+                  <IconButton
+                    onClick={() => handleDeleteMessage(message.id)}
+                    color="error"
+                  >
                     <DeleteIcon />
                   </IconButton>
                 </Box>
@@ -223,21 +268,31 @@ const ManageCourse = ({ course, onBack }) => {
           )}
         </List>
       </TabPanel>
-      
+
       {/* Students Tab */}
       <TabPanel value={tabValue} index={2}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
           <Typography variant="h6">סטודנטים בקורס</Typography>
-          <Button variant="contained" onClick={() => setOpenStudentDialog(true)}>הוסף סטודנט</Button>
+          <Button
+            variant="contained"
+            onClick={() => setOpenStudentDialog(true)}
+          >
+            הוסף סטודנט
+          </Button>
         </Box>
-        
+
         <List>
           {currentCourse.students && currentCourse.students.length > 0 ? (
-            currentCourse.students.map(student => (
+            currentCourse.students.map((student) => (
               <Paper key={student.id} sx={{ mb: 2, p: 2 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="h6">{student.firstName} {student.lastName}</Typography>
-                  <IconButton onClick={() => handleDeleteStudent(student.id)} color="error">
+                <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                  <Typography variant="h6">
+                    {student.firstName} {student.lastName}
+                  </Typography>
+                  <IconButton
+                    onClick={() => handleDeleteStudent(student.id)}
+                    color="error"
+                  >
                     <DeleteIcon />
                   </IconButton>
                 </Box>
@@ -249,9 +304,12 @@ const ManageCourse = ({ course, onBack }) => {
           )}
         </List>
       </TabPanel>
-      
+
       {/* Assignment Dialog */}
-      <Dialog open={openAssignmentDialog} onClose={() => setOpenAssignmentDialog(false)}>
+      <Dialog
+        open={openAssignmentDialog}
+        onClose={() => setOpenAssignmentDialog(false)}
+      >
         <DialogTitle>הוסף מטלה חדשה</DialogTitle>
         <DialogContent>
           <TextField
@@ -260,7 +318,9 @@ const ManageCourse = ({ course, onBack }) => {
             label="כותרת"
             fullWidth
             value={newAssignment.title}
-            onChange={(e) => setNewAssignment({...newAssignment, title: e.target.value})}
+            onChange={(e) =>
+              setNewAssignment({ ...newAssignment, title: e.target.value })
+            }
           />
           <TextField
             margin="dense"
@@ -269,7 +329,12 @@ const ManageCourse = ({ course, onBack }) => {
             multiline
             rows={4}
             value={newAssignment.description}
-            onChange={(e) => setNewAssignment({...newAssignment, description: e.target.value})}
+            onChange={(e) =>
+              setNewAssignment({
+                ...newAssignment,
+                description: e.target.value,
+              })
+            }
           />
           <TextField
             margin="dense"
@@ -278,17 +343,24 @@ const ManageCourse = ({ course, onBack }) => {
             fullWidth
             InputLabelProps={{ shrink: true }}
             value={newAssignment.dueDate}
-            onChange={(e) => setNewAssignment({...newAssignment, dueDate: e.target.value})}
+            onChange={(e) =>
+              setNewAssignment({ ...newAssignment, dueDate: e.target.value })
+            }
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenAssignmentDialog(false)}>ביטול</Button>
-          <Button onClick={handleAddAssignment} variant="contained">הוסף</Button>
+          <Button onClick={handleAddAssignment} variant="contained">
+            הוסף
+          </Button>
         </DialogActions>
       </Dialog>
-      
+
       {/* Message Dialog */}
-      <Dialog open={openMessageDialog} onClose={() => setOpenMessageDialog(false)}>
+      <Dialog
+        open={openMessageDialog}
+        onClose={() => setOpenMessageDialog(false)}
+      >
         <DialogTitle>הוסף הודעה חדשה</DialogTitle>
         <DialogContent>
           <TextField
@@ -299,17 +371,24 @@ const ManageCourse = ({ course, onBack }) => {
             multiline
             rows={4}
             value={newMessage.content}
-            onChange={(e) => setNewMessage({...newMessage, content: e.target.value})}
+            onChange={(e) =>
+              setNewMessage({ ...newMessage, content: e.target.value })
+            }
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenMessageDialog(false)}>ביטול</Button>
-          <Button onClick={handleAddMessage} variant="contained">שלח</Button>
+          <Button onClick={handleAddMessage} variant="contained">
+            שלח
+          </Button>
         </DialogActions>
       </Dialog>
-      
+
       {/* Student Dialog */}
-      <Dialog open={openStudentDialog} onClose={() => setOpenStudentDialog(false)}>
+      <Dialog
+        open={openStudentDialog}
+        onClose={() => setOpenStudentDialog(false)}
+      >
         <DialogTitle>הוסף סטודנט לקורס</DialogTitle>
         <DialogContent>
           <TextField
@@ -318,14 +397,18 @@ const ManageCourse = ({ course, onBack }) => {
             label="שם פרטי"
             fullWidth
             value={newStudent.firstName}
-            onChange={(e) => setNewStudent({...newStudent, firstName: e.target.value})}
+            onChange={(e) =>
+              setNewStudent({ ...newStudent, firstName: e.target.value })
+            }
           />
           <TextField
             margin="dense"
             label="שם משפחה"
             fullWidth
             value={newStudent.lastName}
-            onChange={(e) => setNewStudent({...newStudent, lastName: e.target.value})}
+            onChange={(e) =>
+              setNewStudent({ ...newStudent, lastName: e.target.value })
+            }
           />
           <TextField
             margin="dense"
@@ -333,12 +416,16 @@ const ManageCourse = ({ course, onBack }) => {
             type="email"
             fullWidth
             value={newStudent.email}
-            onChange={(e) => setNewStudent({...newStudent, email: e.target.value})}
+            onChange={(e) =>
+              setNewStudent({ ...newStudent, email: e.target.value })
+            }
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenStudentDialog(false)}>ביטול</Button>
-          <Button onClick={handleAddStudent} variant="contained">הוסף</Button>
+          <Button onClick={handleAddStudent} variant="contained">
+            הוסף
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

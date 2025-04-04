@@ -13,7 +13,9 @@ export class Student {
   }
 
   enrollInCourse(course) {
-    this.enrolledCourses.push(course);
+    // Store only the course ID instead of the entire course object
+    this.enrolledCourseIds = this.enrolledCourseIds || [];
+    this.enrolledCourseIds.push(course.id);
   }
 }
 
