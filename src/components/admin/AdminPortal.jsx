@@ -148,25 +148,30 @@ export default function AdminPortal() {
   };
 
   return (
-    <Container sx={{ mt: 4, mx: -5 }}>
-      <Typography variant="h4" gutterBottom>
+    <Box sx={{ width: '100%', maxWidth: '100%' }}>
+      <Typography variant="h4" gutterBottom sx={{ p: 2 }}>
         פורטל מנהל
       </Typography>
       
-      <Grid container spacing={8}>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' } }}>
         {/* Sidebar */}
-        <Grid>
+        <Box sx={{ 
+          width: { xs: '100%', sm: '250px' },
+          flexShrink: 0,
+          mb: { xs: 2, sm: 0 },
+          mr: { xs: 0, sm: 2 }
+        }}>
           <Sidebar 
             onNavigate={handleNavigate}
             currentPage={currentPage}
           />
-        </Grid>
+        </Box>
         
         {/* Main content */}
-        <Grid sx={{ flexGrow: 1, mx: -5 }}>
+        <Box sx={{ flexGrow: 1 }}>
           {renderContent()}
-        </Grid>
-      </Grid>
-    </Container>
+        </Box>
+      </Box>
+    </Box>
   );
 }

@@ -23,7 +23,7 @@ const Sidebar = ({ onNavigate, currentPage }) => {
   ];
 
   return (
-    <Paper elevation={2} sx={{ width: 240, height: '95%' }}>
+    <Paper sx={{ width: 200, height: '100%' }}>
       <Box sx={{ p: 2 }}>
         <Typography variant="h6" align="center">
           ניהול המערכת
