@@ -29,14 +29,14 @@ export default function AdminPortal() {
 
     if (savedCourses && savedCourses.length > 0) {
       const coursesInstances = savedCourses.map((course) => {
-        const newCourse = new Course(
-          course.id,
-          course.name,
-          course.instructor,
-          course.day,
-          course.time,
-          course.descr
-        );
+        const newCourse = new Course({
+          id: course.id,
+          name: course.name,
+          instructor: course.instructor,
+          day: course.day,
+          time: course.time,
+          descr: course.descr,
+        });
 
         // Restore other properties if they exist
         if (course.assignments) newCourse.assignments = course.assignments;

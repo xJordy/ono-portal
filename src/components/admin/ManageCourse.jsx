@@ -15,6 +15,7 @@ import {
   DialogActions,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
 import { Assignment, Message, Student } from "../../models/Models";
 import { saveCourseToLocalStorage } from "../../utils/localStorage";
 
@@ -44,6 +45,8 @@ const ManageCourse = ({ course, onBack }) => {
     description: "",
     dueDate: "",
   });
+
+  const [assignmentToEdit, setAssignmentToEdit] = useState(null);
 
   const [newMessage, setNewMessage] = useState({
     content: "",
@@ -82,24 +85,39 @@ const ManageCourse = ({ course, onBack }) => {
       newAssignment.dueDate
     );
 
-    setCurrentCourse((prev) => {
-      const updated = { ...prev };
-      updated.assignments = [...(prev.assignments || []), assignment];
-      return updated;
-    });
+    const updatedCourse = currentCourse.addAssignment(assignment);
+    setCurrentCourse(updatedCourse);    
 
     setNewAssignment({ title: "", description: "", dueDate: "" });
     setOpenAssignmentDialog(false);
   };
 
-  const handleDeleteAssignment = (assignmentId) => {
-    setCurrentCourse((prev) => {
-      const updated = { ...prev };
-      updated.assignments = prev.assignments.filter(
-        (a) => a.id !== assignmentId
-      );
-      return updated;
+  const handleEditAssignment = (assignment) => {
+    setAssignmentToEdit(assignment.id);
+    setNewAssignment({
+      title: assignment.title,
+      description: assignment.description,
+      dueDate: assignment.dueDate,
     });
+    setOpenAssignmentDialog(true);
+  };
+
+  const handleUpdateAssignment = () => {
+    const updatedCourse = currentCourse.updateAssignment(assignmentToEdit, {
+      title: newAssignment.title,
+      description: newAssignment.description,
+      dueDate: newAssignment.dueDate,
+    });
+    setCurrentCourse(updatedCourse);
+    // Reset your state accordingly
+    setNewAssignment({ title: "", description: "", dueDate: "" });
+    setAssignmentToEdit(null);
+    setOpenAssignmentDialog(false);
+  };
+
+  const handleDeleteAssignment = (assignmentId) => {
+    const updatedCourse = currentCourse.removeAssignment(assignmentId);
+    setCurrentCourse(updatedCourse);
   };
 
   // Message handlers
@@ -205,12 +223,18 @@ const ManageCourse = ({ course, onBack }) => {
           </Button>
         </Box>
 
-        <List elevation={2} sx={{ }}>
+        <List elevation={2} sx={{}}>
           {currentCourse.assignments && currentCourse.assignments.length > 0 ? (
             currentCourse.assignments.map((assignment) => (
               <Paper key={assignment.id} sx={{ mb: 2, p: 2 }}>
                 <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                   <Typography variant="h6">{assignment.title}</Typography>
+                  <IconButton
+                    onClick={() => handleEditAssignment(assignment)}
+                    color="primary"
+                  >
+                    <EditIcon />
+                  </IconButton>
                   <IconButton
                     onClick={() => handleDeleteAssignment(assignment.id)}
                     color="error"
@@ -350,8 +374,8 @@ const ManageCourse = ({ course, onBack }) => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenAssignmentDialog(false)}>ביטול</Button>
-          <Button onClick={handleAddAssignment} variant="contained">
-            הוסף
+          <Button onClick={assignmentToEdit ? handleUpdateAssignment : handleAddAssignment} variant="contained">
+            {assignmentToEdit ? "עדכן מטלה" : "הוסף מטלה"}
           </Button>
         </DialogActions>
       </Dialog>

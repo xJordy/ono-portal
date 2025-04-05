@@ -41,36 +41,62 @@ export class Message {
 
 // Simple Course model
 export class Course {
-  constructor(id, name, instructor, day, time, descr) {
+  constructor({
+    id,
+    name,
+    instructor,
+    day,
+    time,
+    descr,
+    assignments = [],
+    messages = [],
+    students = [],
+  }) {
     this.id = id;
     this.name = name;
     this.instructor = instructor;
     this.day = day;
     this.time = time;
     this.descr = descr;
-    this.assignments = /** @type {Assignment[]} */ ([]);
-    this.messages = /** @type {Message[]} */ ([]);
-    this.students = /** @type {Student[]} */ ([]);
+    this.assignments = assignments;
+    this.messages = messages;
+    this.students = students;
   }
 
-  // Assignment methods
+  // Immutable Assignment Methods
   addAssignment(assignment) {
-    this.assignments.push(assignment);
-    return this;
+    return new Course({
+      ...this,
+      assignments: [...this.assignments, assignment],
+    });
   }
 
   removeAssignment(assignmentId) {
-    this.assignments = this.assignments.filter(a => a.id !== assignmentId);
-    return this;
+    return new Course({
+      ...this,
+      assignments: this.assignments.filter(a => a.id !== assignmentId),
+    });
   }
 
   updateAssignment(assignmentId, updates) {
-    const index = this.assignments.findIndex(a => a.id === assignmentId);
-    if (index !== -1) {
-      this.assignments[index] = { ...this.assignments[index], ...updates };
-    }
-    return this;
+    const updatedAssignments = this.assignments.map(assignment =>
+      assignment.id === assignmentId
+        ? new Assignment(
+            assignment.id,
+            updates.title !== undefined ? updates.title : assignment.title,
+            updates.description !== undefined ? updates.description : assignment.description,
+            updates.dueDate !== undefined ? updates.dueDate : assignment.dueDate
+          )
+        : assignment
+    );
+    return new Course({
+      ...this,
+      assignments: updatedAssignments,
+    });
   }
+
+  // You would similarly update the message and student methods...
+
 
   // Message methods
   addMessage(message) {

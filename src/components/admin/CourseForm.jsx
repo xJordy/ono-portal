@@ -40,22 +40,29 @@ const CourseForm = ({ onSave, courseToEdit }) => {
 
     if (courseToEdit) {
       // If editing, update the existing course
-      courseToEdit.name = name;
-      courseToEdit.instructor = instructor;
-      courseToEdit.day = day;
-      courseToEdit.time = time;
-      courseToEdit.descr = descr;
-      onSave(courseToEdit);
-    } else {
-      // If adding, create a new course
-      const newCourse = new Course(
-        Math.floor(1000 + Math.random() * 9000).toString(), // 4-digit random ID
+      const updatedCourse = new Course({
+        id: courseToEdit.id,
         name,
         instructor,
         day,
         time,
-        descr
-      );
+        descr,
+        assignments: courseToEdit.assignments,
+        messages: courseToEdit.messages,
+        students: courseToEdit.students,
+      });
+      onSave(updatedCourse);
+      
+    } else {
+      // If adding, create a new course
+      const newCourse = new Course({
+        id: Math.floor(1000 + Math.random() * 9000).toString(), // 4-digit random ID
+        name,
+        instructor,
+        day,
+        time,
+        descr,
+      });
       onSave(newCourse);
     }
 
