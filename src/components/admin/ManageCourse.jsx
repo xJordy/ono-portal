@@ -86,7 +86,7 @@ const ManageCourse = ({ course, onBack }) => {
     );
 
     const updatedCourse = currentCourse.addAssignment(assignment);
-    setCurrentCourse(updatedCourse);    
+    setCurrentCourse(updatedCourse);
 
     setNewAssignment({ title: "", description: "", dueDate: "" });
     setOpenAssignmentDialog(false);
@@ -99,6 +99,7 @@ const ManageCourse = ({ course, onBack }) => {
       description: assignment.description,
       dueDate: assignment.dueDate,
     });
+    // Set dialog state first, then use setTimeout to break the focus chain
     setOpenAssignmentDialog(true);
   };
 
@@ -217,7 +218,12 @@ const ManageCourse = ({ course, onBack }) => {
           <Typography variant="h6">רשימת מטלות</Typography>
           <Button
             variant="contained"
-            onClick={() => setOpenAssignmentDialog(true)}
+            onClick={() => {
+              // Reset assignmentToEdit before opening dialog for a new assignment
+              setAssignmentToEdit(null);
+              setNewAssignment({ title: "", description: "", dueDate: "" });
+              setOpenAssignmentDialog(true);
+            }}
           >
             הוסף מטלה
           </Button>
@@ -229,18 +235,20 @@ const ManageCourse = ({ course, onBack }) => {
               <Paper key={assignment.id} sx={{ mb: 2, p: 2 }}>
                 <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                   <Typography variant="h6">{assignment.title}</Typography>
-                  <IconButton
-                    onClick={() => handleEditAssignment(assignment)}
-                    color="primary"
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
-                    onClick={() => handleDeleteAssignment(assignment.id)}
-                    color="error"
-                  >
-                    <DeleteIcon />
-                  </IconButton>
+                  <Box sx={{ display: "flex", gap: 1 }}>
+                    <IconButton
+                      onClick={() => handleEditAssignment(assignment)}
+                      color="primary"
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      onClick={() => handleDeleteAssignment(assignment.id)}
+                      color="error"
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Box>
                 </Box>
                 <Typography variant="body2" sx={{ mb: 1 }}>
                   תאריך הגשה: {assignment.dueDate}
@@ -332,58 +340,90 @@ const ManageCourse = ({ course, onBack }) => {
       {/* Assignment Dialog */}
       <Dialog
         open={openAssignmentDialog}
-        onClose={() => setOpenAssignmentDialog(false)}
+        onClose={() => {
+          setOpenAssignmentDialog(false);
+          setAssignmentToEdit(null);
+          setNewAssignment({ title: "", description: "", dueDate: "" });
+        }}
+        disableRestoreFocus
+        disableEnforceFocus={false}
+        disableAutoFocus={false}
       >
-        <DialogTitle>הוסף מטלה חדשה</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="כותרת"
-            fullWidth
-            value={newAssignment.title}
-            onChange={(e) =>
-              setNewAssignment({ ...newAssignment, title: e.target.value })
-            }
-          />
-          <TextField
-            margin="dense"
-            label="תיאור"
-            fullWidth
-            multiline
-            rows={4}
-            value={newAssignment.description}
-            onChange={(e) =>
-              setNewAssignment({
-                ...newAssignment,
-                description: e.target.value,
-              })
-            }
-          />
-          <TextField
-            margin="dense"
-            label="תאריך הגשה"
-            type="date"
-            fullWidth
-            InputLabelProps={{ shrink: true }}
-            value={newAssignment.dueDate}
-            onChange={(e) =>
-              setNewAssignment({ ...newAssignment, dueDate: e.target.value })
-            }
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenAssignmentDialog(false)}>ביטול</Button>
-          <Button onClick={assignmentToEdit ? handleUpdateAssignment : handleAddAssignment} variant="contained">
-            {assignmentToEdit ? "עדכן מטלה" : "הוסף מטלה"}
-          </Button>
-        </DialogActions>
+        <DialogTitle>
+          {assignmentToEdit ? "עדכן מטלה" : "הוסף מטלה חדשה"}
+        </DialogTitle>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            assignmentToEdit ? handleUpdateAssignment() : handleAddAssignment();
+          }}
+        >
+          <DialogContent>
+            <TextField
+              autoFocus
+              margin="dense"
+              label="כותרת"
+              fullWidth
+              value={newAssignment.title}
+              onChange={(e) =>
+                setNewAssignment({ ...newAssignment, title: e.target.value })
+              }
+              required
+            />
+            <TextField
+              margin="dense"
+              label="תיאור"
+              fullWidth
+              multiline
+              rows={4}
+              value={newAssignment.description}
+              onChange={(e) =>
+                setNewAssignment({
+                  ...newAssignment,
+                  description: e.target.value,
+                })
+              }
+              required
+            />
+            <TextField
+              margin="dense"
+              label="תאריך הגשה"
+              type="date"
+              fullWidth
+              sx={{
+                "& input": {
+                  textAlign: "center",
+                },
+              }}
+              value={newAssignment.dueDate}
+              onChange={(e) =>
+                setNewAssignment({ ...newAssignment, dueDate: e.target.value })
+              }
+              required
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button
+              type="button"
+              onClick={() => setOpenAssignmentDialog(false)}
+            >
+              ביטול
+            </Button>
+            <Button type="submit" variant="contained">
+              {assignmentToEdit ? "עדכן מטלה" : "הוסף מטלה"}
+            </Button>
+          </DialogActions>
+        </form>
       </Dialog>
 
       {/* Message Dialog */}
       <Dialog
         open={openMessageDialog}
         onClose={() => setOpenMessageDialog(false)}
+        // Add these props for better focus management
+        disableRestoreFocus
+        disableEnforceFocus={false}
+        disableAutoFocus={false}
       >
         <DialogTitle>הוסף הודעה חדשה</DialogTitle>
         <DialogContent>
@@ -412,6 +452,10 @@ const ManageCourse = ({ course, onBack }) => {
       <Dialog
         open={openStudentDialog}
         onClose={() => setOpenStudentDialog(false)}
+        // Add these props for better focus management
+        disableRestoreFocus
+        disableEnforceFocus={false}
+        disableAutoFocus={false}
       >
         <DialogTitle>הוסף סטודנט לקורס</DialogTitle>
         <DialogContent>

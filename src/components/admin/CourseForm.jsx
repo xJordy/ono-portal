@@ -52,7 +52,6 @@ const CourseForm = ({ onSave, courseToEdit }) => {
         students: courseToEdit.students,
       });
       onSave(updatedCourse);
-      
     } else {
       // If adding, create a new course
       const newCourse = new Course({
@@ -123,6 +122,9 @@ const CourseForm = ({ onSave, courseToEdit }) => {
             fullWidth
             type="time"
             sx={{
+              "& input": {
+                textAlign: "center",
+              },
               "& input::-webkit-calendar-picker-indicator": {
                 display: "none",
               },
