@@ -78,21 +78,6 @@ const ManageCourse = ({ course, onBack }) => {
   }, [currentCourse]);
 
   // Assignment handlers
-  const handleAddAssignment = () => {
-    const assignment = new Assignment(
-      Date.now().toString(),
-      newAssignment.title,
-      newAssignment.description,
-      newAssignment.dueDate
-    );
-
-    const updatedCourse = currentCourse.addAssignment(assignment);
-    setCurrentCourse(updatedCourse);
-
-    setNewAssignment({ title: "", description: "", dueDate: "" });
-    setOpenAssignmentDialog(false);
-  };
-
   const handleEditAssignment = (assignment) => {
     setAssignmentToEdit(assignment.id);
     setNewAssignment({
@@ -102,19 +87,6 @@ const ManageCourse = ({ course, onBack }) => {
     });
     // Set dialog state first, then use setTimeout to break the focus chain
     setOpenAssignmentDialog(true);
-  };
-
-  const handleUpdateAssignment = () => {
-    const updatedCourse = currentCourse.updateAssignment(assignmentToEdit, {
-      title: newAssignment.title,
-      description: newAssignment.description,
-      dueDate: newAssignment.dueDate,
-    });
-    setCurrentCourse(updatedCourse);
-    // Reset your state accordingly
-    setNewAssignment({ title: "", description: "", dueDate: "" });
-    setAssignmentToEdit(null);
-    setOpenAssignmentDialog(false);
   };
 
   const handleDeleteAssignment = (assignmentId) => {
