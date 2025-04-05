@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Box, Typography, Container, Grid } from "@mui/material";
+import { Box, Typography, Card, CardContent } from "@mui/material";
 import CourseForm from "./CourseForm";
 import CourseTable from "./CourseTable";
 import ManageCourse from "./ManageCourse";
@@ -9,6 +9,7 @@ import {
   saveCoursesToLocalStorage,
   getCoursesFromLocalStorage,
 } from "../../utils/localStorage";
+import DashboardCards from "./DashboardCards";
 
 export default function AdminPortal() {
   // State to store all courses
@@ -101,20 +102,20 @@ export default function AdminPortal() {
     }
   };
 
+  // Function to handle course updates
+  const handleCourseUpdate = (updatedCourse) => {
+    setCourses((prev) =>
+      prev.map((course) =>
+        course.id === updatedCourse.id ? updatedCourse : course
+      )
+    );
+  };
+
   // Render the appropriate content based on current page
   const renderContent = () => {
     switch (currentPage) {
       case "dashboard":
-        return (
-          <Box>
-            <Typography variant="h5" gutterBottom>
-              לוח בקרה
-            </Typography>
-            <Typography>
-              ברוך הבא למערכת ניהול הקורסים. השתמש בתפריט כדי לנווט.
-            </Typography>
-          </Box>
-        );
+        return <DashboardCards courses={courses} />;
       case "courses":
         return (
           <Box>
@@ -160,6 +161,7 @@ export default function AdminPortal() {
             <ManageCourse
               course={selectedCourse}
               onBack={() => setCurrentPage("courses")}
+              onCourseUpdate={handleCourseUpdate}
             />
           </Box>
         );

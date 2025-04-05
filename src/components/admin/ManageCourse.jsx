@@ -55,7 +55,8 @@ function TabPanel(props) {
   );
 }
 
-const ManageCourse = ({ course, onBack }) => {
+// Update the component signature to accept the new prop
+const ManageCourse = ({ course, onBack, onCourseUpdate }) => {
   const [currentCourse, setCurrentCourse] = useState(course);
   const [tabValue, setTabValue] = useState(0);
 
@@ -110,6 +111,7 @@ const ManageCourse = ({ course, onBack }) => {
   const handleDeleteAssignment = (assignmentId) => {
     const updatedCourse = currentCourse.removeAssignment(assignmentId);
     setCurrentCourse(updatedCourse);
+    if (onCourseUpdate) onCourseUpdate(updatedCourse);
   };
 
   // Message handlers
@@ -122,9 +124,12 @@ const ManageCourse = ({ course, onBack }) => {
       new Date()
     );
 
-    // Use the Course's addMessage method instead of directly modifying state
     const updatedCourse = currentCourse.addMessage(message);
     setCurrentCourse(updatedCourse);
+    
+    // Add this line to propagate the change to parent
+    if (onCourseUpdate) onCourseUpdate(updatedCourse);
+    
     setOpenMessageDialog(false);
   };
 
@@ -132,6 +137,7 @@ const ManageCourse = ({ course, onBack }) => {
     // Use the Course's removeMessage method
     const updatedCourse = currentCourse.removeMessage(messageId);
     setCurrentCourse(updatedCourse);
+    if (onCourseUpdate) onCourseUpdate(updatedCourse);
   };
 
   // Student handlers
@@ -153,6 +159,7 @@ const ManageCourse = ({ course, onBack }) => {
 
     setNewStudent({ firstName: "", lastName: "", email: "" });
     setOpenStudentDialog(false);
+    if (onCourseUpdate) onCourseUpdate(currentCourse);
   };
 
   const handleDeleteStudent = (studentId) => {
@@ -161,6 +168,7 @@ const ManageCourse = ({ course, onBack }) => {
       updated.students = prev.students.filter((s) => s.id !== studentId);
       return updated;
     });
+    if (onCourseUpdate) onCourseUpdate(currentCourse);
   };
 
   if (!currentCourse) return <Typography>לא נמצא קורס</Typography>;
@@ -357,6 +365,7 @@ const ManageCourse = ({ course, onBack }) => {
                 }
               );
               setCurrentCourse(updatedCourse);
+              if (onCourseUpdate) onCourseUpdate(updatedCourse);
             } else {
               // Add new assignment
               const assignment = new Assignment(
@@ -367,6 +376,7 @@ const ManageCourse = ({ course, onBack }) => {
               );
               const updatedCourse = currentCourse.addAssignment(assignment);
               setCurrentCourse(updatedCourse);
+              if (onCourseUpdate) onCourseUpdate(updatedCourse);
             }
             // Reset state and close dialog
             setNewAssignment({ title: "", description: "", dueDate: "" });
