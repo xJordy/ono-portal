@@ -19,6 +19,24 @@ import EditIcon from "@mui/icons-material/Edit";
 import { Assignment, Message, Student } from "../../models/Models";
 import { saveCourseToLocalStorage } from "../../utils/localStorage";
 import AssignmentForm from "./AssignmentForm";
+import MessageForm from "./MessageForm";
+
+// Update the formatDateTime function to return separate date and time
+const formatDateTime = (timestamp) => {
+  const date = new Intl.DateTimeFormat('he-IL', {
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit'
+  }).format(new Date(timestamp));
+  
+  const time = new Intl.DateTimeFormat('he-IL', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  }).format(new Date(timestamp));
+  
+  return { date, time };
+};
 
 // TabPanel component for tab content
 function TabPanel(props) {
@@ -85,7 +103,6 @@ const ManageCourse = ({ course, onBack }) => {
       description: assignment.description,
       dueDate: assignment.dueDate,
     });
-    // Set dialog state first, then use setTimeout to break the focus chain
     setOpenAssignmentDialog(true);
   };
 
@@ -95,30 +112,24 @@ const ManageCourse = ({ course, onBack }) => {
   };
 
   // Message handlers
-  const handleAddMessage = () => {
+  const handleAddMessage = (formData) => {
     const message = new Message(
       Date.now().toString(),
-      newMessage.content,
-      newMessage.sender,
+      formData.content,
+      formData.sender,
       new Date()
     );
 
-    setCurrentCourse((prev) => {
-      const updated = { ...prev };
-      updated.messages = [...(prev.messages || []), message];
-      return updated;
-    });
-
-    setNewMessage({ content: "", sender: "מנהל" });
+    // Use the Course's addMessage method instead of directly modifying state
+    const updatedCourse = currentCourse.addMessage(message);
+    setCurrentCourse(updatedCourse);
     setOpenMessageDialog(false);
   };
 
   const handleDeleteMessage = (messageId) => {
-    setCurrentCourse((prev) => {
-      const updated = { ...prev };
-      updated.messages = prev.messages.filter((m) => m.id !== messageId);
-      return updated;
-    });
+    // Use the Course's removeMessage method
+    const updatedCourse = currentCourse.removeMessage(messageId);
+    setCurrentCourse(updatedCourse);
   };
 
   // Student handlers
@@ -255,8 +266,7 @@ const ManageCourse = ({ course, onBack }) => {
               <Paper key={message.id} sx={{ mb: 2, p: 2 }}>
                 <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                   <Typography variant="subtitle2">
-                    {message.sender} -{" "}
-                    {new Date(message.timestamp).toLocaleString()}
+                    {message.sender} - בתאריך: {formatDateTime(message.timestamp).date} בשעה: {formatDateTime(message.timestamp).time}
                   </Typography>
                   <IconButton
                     onClick={() => handleDeleteMessage(message.id)}
@@ -364,32 +374,15 @@ const ManageCourse = ({ course, onBack }) => {
       <Dialog
         open={openMessageDialog}
         onClose={() => setOpenMessageDialog(false)}
-        // Add these props for better focus management
         disableRestoreFocus
         disableEnforceFocus={false}
         disableAutoFocus={false}
       >
         <DialogTitle>הוסף הודעה חדשה</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="תוכן ההודעה"
-            fullWidth
-            multiline
-            rows={4}
-            value={newMessage.content}
-            onChange={(e) =>
-              setNewMessage({ ...newMessage, content: e.target.value })
-            }
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenMessageDialog(false)}>ביטול</Button>
-          <Button onClick={handleAddMessage} variant="contained">
-            שלח
-          </Button>
-        </DialogActions>
+        <MessageForm
+          onSubmit={handleAddMessage}
+          onCancel={() => setOpenMessageDialog(false)}
+        />
       </Dialog>
 
       {/* Student Dialog */}

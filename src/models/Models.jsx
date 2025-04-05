@@ -1,3 +1,23 @@
+// Simple Assignment model
+export class Assignment {
+  constructor(id, title, description, dueDate) {
+    this.id = id;
+    this.title = title;
+    this.description = description;
+    this.dueDate = dueDate;
+  }
+}
+
+// Simple Message model
+export class Message {
+  constructor(id, content, sender, timestamp) {
+    this.id = id;
+    this.content = content;
+    this.sender = sender;
+    this.timestamp = timestamp || new Date();
+  }
+}
+
 // Simple Student model
 export class Student {
   constructor(id, firstName, lastName, email) {
@@ -16,26 +36,6 @@ export class Student {
     // Store only the course ID instead of the entire course object
     this.enrolledCourseIds = this.enrolledCourseIds || [];
     this.enrolledCourseIds.push(course.id);
-  }
-}
-
-// Simple Assignment model
-export class Assignment {
-  constructor(id, title, description, dueDate) {
-    this.id = id;
-    this.title = title;
-    this.description = description;
-    this.dueDate = dueDate;
-  }
-}
-
-// Simple Message model
-export class Message {
-  constructor(id, content, sender, timestamp) {
-    this.id = id;
-    this.content = content;
-    this.sender = sender;
-    this.timestamp = timestamp || new Date();
   }
 }
 
@@ -95,18 +95,19 @@ export class Course {
     });
   }
 
-  // You would similarly update the message and student methods...
-
-
   // Message methods
   addMessage(message) {
-    this.messages.push(message);
-    return this;
+    return new Course({
+      ...this,
+      messages: [...this.messages, message],
+    });
   }
   
   removeMessage(messageId) {
-    this.messages = this.messages.filter(m => m.id !== messageId);
-    return this;
+    return new Course({
+      ...this,
+      messages: this.messages.filter(m => m.id !== messageId),
+    });
   }
 
   // Student methods
