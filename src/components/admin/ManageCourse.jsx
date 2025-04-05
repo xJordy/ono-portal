@@ -18,6 +18,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import { Assignment, Message, Student } from "../../models/Models";
 import { saveCourseToLocalStorage } from "../../utils/localStorage";
+import AssignmentForm from "./AssignmentForm";
 
 // TabPanel component for tab content
 function TabPanel(props) {
@@ -352,68 +353,39 @@ const ManageCourse = ({ course, onBack }) => {
         <DialogTitle>
           {assignmentToEdit ? "עדכן מטלה" : "הוסף מטלה חדשה"}
         </DialogTitle>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            assignmentToEdit ? handleUpdateAssignment() : handleAddAssignment();
+        <AssignmentForm
+          assignment={assignmentToEdit ? newAssignment : null}
+          isEditMode={!!assignmentToEdit}
+          onSubmit={(formData) => {
+            if (assignmentToEdit) {
+              // Update assignment with form data
+              const updatedCourse = currentCourse.updateAssignment(
+                assignmentToEdit,
+                {
+                  title: formData.title,
+                  description: formData.description,
+                  dueDate: formData.dueDate,
+                }
+              );
+              setCurrentCourse(updatedCourse);
+            } else {
+              // Add new assignment
+              const assignment = new Assignment(
+                Date.now().toString(),
+                formData.title,
+                formData.description,
+                formData.dueDate
+              );
+              const updatedCourse = currentCourse.addAssignment(assignment);
+              setCurrentCourse(updatedCourse);
+            }
+            // Reset state and close dialog
+            setNewAssignment({ title: "", description: "", dueDate: "" });
+            setAssignmentToEdit(null);
+            setOpenAssignmentDialog(false);
           }}
-        >
-          <DialogContent>
-            <TextField
-              autoFocus
-              margin="dense"
-              label="כותרת"
-              fullWidth
-              value={newAssignment.title}
-              onChange={(e) =>
-                setNewAssignment({ ...newAssignment, title: e.target.value })
-              }
-              required
-            />
-            <TextField
-              margin="dense"
-              label="תיאור"
-              fullWidth
-              multiline
-              rows={4}
-              value={newAssignment.description}
-              onChange={(e) =>
-                setNewAssignment({
-                  ...newAssignment,
-                  description: e.target.value,
-                })
-              }
-              required
-            />
-            <TextField
-              margin="dense"
-              label="תאריך הגשה"
-              type="date"
-              fullWidth
-              sx={{
-                "& input": {
-                  textAlign: "center",
-                },
-              }}
-              value={newAssignment.dueDate}
-              onChange={(e) =>
-                setNewAssignment({ ...newAssignment, dueDate: e.target.value })
-              }
-              required
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button
-              type="button"
-              onClick={() => setOpenAssignmentDialog(false)}
-            >
-              ביטול
-            </Button>
-            <Button type="submit" variant="contained">
-              {assignmentToEdit ? "עדכן מטלה" : "הוסף מטלה"}
-            </Button>
-          </DialogActions>
-        </form>
+          onCancel={() => setOpenAssignmentDialog(false)}
+        />
       </Dialog>
 
       {/* Message Dialog */}
