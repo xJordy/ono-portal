@@ -10,6 +10,7 @@ import {
   getCoursesFromLocalStorage,
 } from "../../utils/localStorage";
 import DashboardCards from "./DashboardCards";
+import InfoIcon from '@mui/icons-material/Info';
 
 export default function AdminPortal() {
   // State to store all courses
@@ -172,9 +173,38 @@ export default function AdminPortal() {
 
   return (
     <Box sx={{ width: "100%", maxWidth: "100%" }}>
-      <Typography variant="h4" gutterBottom sx={{ p: 2 }}>
-        פורטל מנהל
-      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', p: 2, gap: 9 }}>
+        <Typography variant="h4" sx={{ m: 0 }}>
+          פורטל מנהל
+        </Typography>
+        
+        <Box sx={{ 
+          display: 'flex',
+          bgcolor: '#fff9c4', // Light yellow background
+          borderRadius: 2,
+          boxShadow: '0px 2px 8px rgba(0,0,0,0.15)',
+          overflow: 'hidden',
+          flexGrow: 1,
+          position: 'relative',
+          borderLeft: '4px solid #f57c00', // Darker orange accent on the right edge
+        }}>
+          <Box sx={{ 
+            display: 'flex',
+            flexDirection: 'column',
+            p: 1,
+            width: '100%'
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <InfoIcon sx={{ color: '#f57c00', mr: 1 }} />
+              <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#f57c00' }}>
+                שימו לב - הודעה חשובה!
+              </Typography>
+            </Box>
+            <Typography variant="body2">
+            נותרו לך 48 שעות להשלמת הזנת ציונים סופיים ו-72 שעות להשיב על כל ההודעות שטרם נענו בפורטל הקורס. אנא ודא עמידה בזמנים בהתאם להנחיות המוסד.</Typography>
+          </Box>
+        </Box>
+      </Box>
 
       <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" } }}>
         {/* Sidebar */}

@@ -21,7 +21,7 @@ const CourseTable = ({
   return (
     <TableContainer component={Paper}>
       <Table sx={{ width: "100%", ...(tableProps?.sx || {}) }}>
-        <TableHead>
+        <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
           <TableRow>
             <TableCell width={columnWidths.id}>קוד קורס</TableCell>
             <TableCell
@@ -44,40 +44,49 @@ const CourseTable = ({
             </TableRow>
           ) : (
             courses.map((course) => (
-              <TableRow key={course.id}>
+              <TableRow
+                key={course.id}
+                onClick={() => onEdit(course)}
+                sx={{
+                  cursor: "pointer",
+                  transition: "background-color 0.3s",
+                  "&:hover": {
+                    backgroundColor: "rgba(0, 0, 0, 0.04)",
+                  },
+                }}
+              >
                 <TableCell>{course.id}</TableCell>
                 <TableCell
                   sx={{ whiteSpace: "normal", wordWrap: "break-word" }}
                 >
                   {course.name}
                 </TableCell>
-                {/* No whitespace between cells */}
                 <TableCell>{course.instructor}</TableCell>
                 <TableCell>
                   {course.day} {course.time}
                 </TableCell>
-                <TableCell>
+                <TableCell
+                  onClick={(e) => e.stopPropagation()} // Prevent row click when clicking buttons
+                >
                   <Button
                     variant="outlined"
                     color="primary"
                     size="small"
-                    onClick={() => onManage(course)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onManage(course);
+                    }}
                   >
                     ניהול
                   </Button>
                   <Button
                     variant="outlined"
-                    size="small"
-                    onClick={() => onEdit(course)}
-                    sx={{ ml: 1 }}
-                  >
-                    עריכה
-                  </Button>
-                  <Button
-                    variant="outlined"
                     color="error"
                     size="small"
-                    onClick={() => onDelete(course.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(course.id);
+                    }}
                     sx={{ ml: 1 }}
                   >
                     מחיקה
