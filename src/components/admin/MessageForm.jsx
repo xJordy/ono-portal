@@ -3,6 +3,7 @@ import { TextField, DialogContent, DialogActions, Button } from "@mui/material";
 
 const MessageForm = ({ onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
+    title: "",
     content: "",
     sender: "מנהל",
   });
@@ -20,6 +21,7 @@ const MessageForm = ({ onSubmit, onCancel }) => {
     onSubmit(formData);
     // Reset form
     setFormData({
+      title: "",
       content: "",
       sender: "מנהל",
     });
@@ -27,15 +29,24 @@ const MessageForm = ({ onSubmit, onCancel }) => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <DialogContent>
+      <DialogContent sx={{ width: '550px', height: '300px' }}>
+        <TextField
+          autoFocus
+          margin="dense"
+          label="נושא ההודעה"
+          fullWidth
+          name="title"
+          value={formData.title}
+          onChange={handleChange}
+          required
+        />
         <TextField
           autoFocus
           margin="dense"
           label="תוכן ההודעה"
           fullWidth
           multiline
-          rows={4}
-          columns={12}
+          rows={9}
           name="content"
           value={formData.content}
           onChange={handleChange}

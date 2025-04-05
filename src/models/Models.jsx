@@ -10,8 +10,9 @@ export class Assignment {
 
 // Simple Message model
 export class Message {
-  constructor(id, content, sender, timestamp) {
+  constructor(id, title, content, sender, timestamp) {
     this.id = id;
+    this.title = title;
     this.content = content;
     this.sender = sender;
     this.timestamp = timestamp || new Date();

@@ -13,6 +13,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Divider,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
@@ -23,18 +24,18 @@ import MessageForm from "./MessageForm";
 
 // Update the formatDateTime function to return separate date and time
 const formatDateTime = (timestamp) => {
-  const date = new Intl.DateTimeFormat('he-IL', {
-    day: '2-digit',
-    month: '2-digit',
-    year: '2-digit'
+  const date = new Intl.DateTimeFormat("he-IL", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
   }).format(new Date(timestamp));
-  
-  const time = new Intl.DateTimeFormat('he-IL', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
+
+  const time = new Intl.DateTimeFormat("he-IL", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
   }).format(new Date(timestamp));
-  
+
   return { date, time };
 };
 
@@ -115,6 +116,7 @@ const ManageCourse = ({ course, onBack }) => {
   const handleAddMessage = (formData) => {
     const message = new Message(
       Date.now().toString(),
+      formData.title,
       formData.content,
       formData.sender,
       new Date()
@@ -265,8 +267,8 @@ const ManageCourse = ({ course, onBack }) => {
             currentCourse.messages.map((message) => (
               <Paper key={message.id} sx={{ mb: 2, p: 2 }}>
                 <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                  <Typography variant="subtitle2">
-                    {message.sender} - בתאריך: {formatDateTime(message.timestamp).date} בשעה: {formatDateTime(message.timestamp).time}
+                  <Typography variant="h6" sx={{ mb: 1 }}>
+                    {message.title}
                   </Typography>
                   <IconButton
                     onClick={() => handleDeleteMessage(message.id)}
@@ -275,7 +277,12 @@ const ManageCourse = ({ course, onBack }) => {
                     <DeleteIcon />
                   </IconButton>
                 </Box>
-                <Typography variant="body1">{message.content}</Typography>
+                <Typography variant="subtitle2" sx={{ mb: 1.5 }}>
+                  מאת: {message.sender} | תאריך:{" "}
+                  {formatDateTime(message.timestamp).date} | שעה:{" "}
+                  {formatDateTime(message.timestamp).time}
+                </Typography>
+                <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap'}}>{message.content}</Typography>
               </Paper>
             ))
           ) : (
