@@ -1,5 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Box, Typography } from "@mui/material";
+import { 
+  Box, 
+  Typography, 
+  Snackbar,
+  Alert
+} from "@mui/material";
 import CourseForm from "./CourseForm";
 import CourseTable from "./CourseTable";
 import ManageCourse from "./ManageCourse";
@@ -23,6 +28,12 @@ export default function AdminPortal() {
   const [currentPage, setCurrentPage] = useState("dashboard");
   // Ref to track initialization
   const isFirstRenderRef = useRef(true);
+  // Add state for the success message
+  const [successAlert, setSuccessAlert] = useState({
+    open: false,
+    message: '',
+    severity: 'success' // Default severity
+  });
 
   // Load courses from localStorage when component mounts
   useEffect(() => {
@@ -70,12 +81,34 @@ export default function AdminPortal() {
       // Update existing course
       setCourses((prev) => prev.map((c) => (c.id === course.id ? course : c)));
       setCourseToEdit(null);
+      
+      // Show success message for update
+      setSuccessAlert({
+        open: true,
+        message: `הקורס "${course.name}" עודכן בהצלחה!`,
+        severity: "success"
+      });
     } else {
       // Add new course
       setCourses((prev) => [...prev, course]);
+      
+      // Show success message for new course
+      setSuccessAlert({
+        open: true,
+        message: `הקורס "${course.name}" נוסף בהצלחה!`,
+        severity: "success"
+      });
     }
     // Navigate to courses list after saving
     setCurrentPage("courses");
+  };
+
+  // Handle closing the success alert
+  const handleCloseAlert = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setSuccessAlert({...successAlert, open: false});
   };
 
   // Function to start editing a course
@@ -92,7 +125,19 @@ export default function AdminPortal() {
 
   // Function to delete a course
   const handleDeleteCourse = (courseId) => {
+    // First, find the course to get its name before deletion
+    const courseToDelete = courses.find(course => course.id === courseId);
+    const courseName = courseToDelete ? courseToDelete.name : "הקורס";
+    
+    // Delete the course
     setCourses((prev) => prev.filter((course) => course.id !== courseId));
+    
+    // Show deletion success message with info severity
+    setSuccessAlert({
+      open: true,
+      message: `${courseName} נמחק בהצלחה!`,
+      severity: "info" // Blue alert for deletions
+    });
   };
 
   // Handle navigation changes
@@ -225,6 +270,21 @@ export default function AdminPortal() {
         {/* Main content */}
         <Box sx={{ flexGrow: 1 }}>{renderContent()}</Box>
       </Box>
+
+      <Snackbar
+        open={successAlert.open}
+        autoHideDuration={4000}
+        onClose={handleCloseAlert}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleCloseAlert} 
+          severity={successAlert.severity || "success"} // Use the severity from state
+          sx={{ width: '100%' }}
+        >
+          {successAlert.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

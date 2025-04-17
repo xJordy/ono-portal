@@ -14,6 +14,8 @@ import {
   DialogContent,
   DialogActions,
   Divider,
+  Snackbar,
+  Alert
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
@@ -99,6 +101,13 @@ const [assignmentToDelete, setAssignmentToDelete] = useState(null);
 const [messageToDelete, setMessageToDelete] = useState(null);
 const [studentToDelete, setStudentToDelete] = useState(null);
 
+  // Add success alert state
+  const [successAlert, setSuccessAlert] = useState({
+    open: false,
+    message: '',
+    severity: 'success' // Default to success for adds/edits
+  });
+
   // Handle tab change
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
@@ -127,10 +136,76 @@ const [studentToDelete, setStudentToDelete] = useState(null);
   };
 
   const handleConfirmDeleteAssignment = () => {
+    // Get the assignment title before deletion for the message
+    const assignmentTitle = currentCourse.assignments.find(
+      a => a.id === assignmentToDelete
+    )?.title || "המטלה";
+    
     const updatedCourse = currentCourse.removeAssignment(assignmentToDelete);
     setCurrentCourse(updatedCourse);
     if (onCourseUpdate) onCourseUpdate(updatedCourse);
+    
+    // Show info message for deletion instead of success
+    setSuccessAlert({
+      open: true,
+      message: `${assignmentTitle} נמחקה בהצלחה!`,
+      severity: "info"  // Change to blue
+    });
+    
     setAssignmentToDelete(null);
+  };
+
+  // Add handler to close alert
+  const handleCloseAlert = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setSuccessAlert({...successAlert, open: false});
+  };
+
+  // Update the assignment submission handler
+  const handleSubmitAssignment = (formData) => {
+    if (assignmentToEdit) {
+      // Update assignment with form data
+      const updatedCourse = currentCourse.updateAssignment(
+        assignmentToEdit,
+        {
+          title: formData.title,
+          description: formData.description,
+          dueDate: formData.dueDate,
+        }
+      );
+      setCurrentCourse(updatedCourse);
+      if (onCourseUpdate) onCourseUpdate(updatedCourse);
+      
+      // Show success message
+      setSuccessAlert({
+        open: true,
+        message: `המטלה "${formData.title}" עודכנה בהצלחה!`
+      });
+    } else {
+      // Add new assignment with 4-digit ID
+      const existingIds = currentCourse.assignments?.map(a => a.id) || [];
+      const assignment = new Assignment(
+        generateUniqueId(existingIds),
+        formData.title,
+        formData.description,
+        formData.dueDate
+      );
+      const updatedCourse = currentCourse.addAssignment(assignment);
+      setCurrentCourse(updatedCourse);
+      if (onCourseUpdate) onCourseUpdate(updatedCourse);
+      
+      // Show success message
+      setSuccessAlert({
+        open: true,
+        message: `המטלה "${formData.title}" נוספה בהצלחה!`
+      });
+    }
+    // Reset state and close dialog
+    setNewAssignment({ title: "", description: "", dueDate: "" });
+    setAssignmentToEdit(null);
+    setOpenAssignmentDialog(false);
   };
 
   // Message handlers
@@ -147,8 +222,13 @@ const [studentToDelete, setStudentToDelete] = useState(null);
     const updatedCourse = currentCourse.addMessage(message);
     setCurrentCourse(updatedCourse);
     
-    // Add this line to propagate the change to parent
     if (onCourseUpdate) onCourseUpdate(updatedCourse);
+    
+    // Show success message
+    setSuccessAlert({
+      open: true,
+      message: `ההודעה "${formData.title}" נוספה בהצלחה!`
+    });
     
     setOpenMessageDialog(false);
   };
@@ -158,9 +238,21 @@ const [studentToDelete, setStudentToDelete] = useState(null);
   };
 
   const handleConfirmDeleteMessage = () => {
+    // Get the message title before deletion for the message
+    const messageTitle = currentCourse.messages.find(
+      m => m.id === messageToDelete
+    )?.title || "ההודעה";
+    
     const updatedCourse = currentCourse.removeMessage(messageToDelete);
     setCurrentCourse(updatedCourse);
     if (onCourseUpdate) onCourseUpdate(updatedCourse);
+    
+    setSuccessAlert({
+      open: true,
+      message: `${messageTitle} נמחקה בהצלחה!`,
+      severity: "info"  // Change to blue
+    });
+    
     setMessageToDelete(null);
   };
 
@@ -192,12 +284,25 @@ const [studentToDelete, setStudentToDelete] = useState(null);
   };
 
   const handleConfirmDeleteStudent = () => {
+    // Get student name before deletion for the message
+    const student = currentCourse.students.find(s => s.id === studentToDelete);
+    const studentName = student ? `${student.firstName} ${student.lastName}` : "הסטודנט/ית";
+    
     setCurrentCourse((prev) => {
       const updated = { ...prev };
       updated.students = prev.students.filter((s) => s.id !== studentToDelete);
       return updated;
     });
+    
     if (onCourseUpdate) onCourseUpdate(currentCourse);
+    
+    // Show info message for deletion instead of success
+    setSuccessAlert({
+      open: true,
+      message: `${studentName} הוסר/ה מהקורס בהצלחה!`,
+      severity: "info"  // Change to blue
+    });
+    
     setStudentToDelete(null);
   };
 
@@ -383,37 +488,7 @@ const [studentToDelete, setStudentToDelete] = useState(null);
         <AssignmentForm
           assignment={assignmentToEdit ? newAssignment : null}
           isEditMode={!!assignmentToEdit}
-          onSubmit={(formData) => {
-            if (assignmentToEdit) {
-              // Update assignment with form data
-              const updatedCourse = currentCourse.updateAssignment(
-                assignmentToEdit,
-                {
-                  title: formData.title,
-                  description: formData.description,
-                  dueDate: formData.dueDate,
-                }
-              );
-              setCurrentCourse(updatedCourse);
-              if (onCourseUpdate) onCourseUpdate(updatedCourse);
-            } else {
-              // Add new assignment with 4-digit ID
-              const existingIds = currentCourse.assignments?.map(a => a.id) || [];
-              const assignment = new Assignment(
-                generateUniqueId(existingIds),
-                formData.title,
-                formData.description,
-                formData.dueDate
-              );
-              const updatedCourse = currentCourse.addAssignment(assignment);
-              setCurrentCourse(updatedCourse);
-              if (onCourseUpdate) onCourseUpdate(updatedCourse);
-            }
-            // Reset state and close dialog
-            setNewAssignment({ title: "", description: "", dueDate: "" });
-            setAssignmentToEdit(null);
-            setOpenAssignmentDialog(false);
-          }}
+          onSubmit={handleSubmitAssignment}
           onCancel={() => setOpenAssignmentDialog(false)}
         />
       </Dialog>
@@ -508,6 +583,21 @@ const [studentToDelete, setStudentToDelete] = useState(null);
         message="פעולה זו תסיר את הסטודנט מרשימת המשתתפים בקורס. האם אתה בטוח?"
         confirmText="כן, הסר את הסטודנט"
       />
+
+      <Snackbar
+        open={successAlert.open}
+        autoHideDuration={4000}
+        onClose={handleCloseAlert}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleCloseAlert} 
+          severity={successAlert.severity || "success"} 
+          sx={{ width: '100%' }}
+        >
+          {successAlert.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
