@@ -21,6 +21,7 @@ import { Assignment, Message, Student } from "../../models/Models";
 import { saveCourseToLocalStorage } from "../../utils/localStorage";
 import AssignmentForm from "./AssignmentForm";
 import MessageForm from "./MessageForm";
+import ConfirmationDialog from "../common/ConfirmationDialog";
 
 // Add this right after your imports
 const generateUniqueId = (existingIds) => {
@@ -93,6 +94,10 @@ const ManageCourse = ({ course, onBack, onCourseUpdate }) => {
   const [openAssignmentDialog, setOpenAssignmentDialog] = useState(false);
   const [openMessageDialog, setOpenMessageDialog] = useState(false);
   const [openStudentDialog, setOpenStudentDialog] = useState(false);
+  // Add these near your other state variables
+const [assignmentToDelete, setAssignmentToDelete] = useState(null);
+const [messageToDelete, setMessageToDelete] = useState(null);
+const [studentToDelete, setStudentToDelete] = useState(null);
 
   // Handle tab change
   const handleTabChange = (event, newValue) => {
@@ -118,9 +123,14 @@ const ManageCourse = ({ course, onBack, onCourseUpdate }) => {
   };
 
   const handleDeleteAssignment = (assignmentId) => {
-    const updatedCourse = currentCourse.removeAssignment(assignmentId);
+    setAssignmentToDelete(assignmentId);
+  };
+
+  const handleConfirmDeleteAssignment = () => {
+    const updatedCourse = currentCourse.removeAssignment(assignmentToDelete);
     setCurrentCourse(updatedCourse);
     if (onCourseUpdate) onCourseUpdate(updatedCourse);
+    setAssignmentToDelete(null);
   };
 
   // Message handlers
@@ -144,10 +154,14 @@ const ManageCourse = ({ course, onBack, onCourseUpdate }) => {
   };
 
   const handleDeleteMessage = (messageId) => {
-    // Use the Course's removeMessage method
-    const updatedCourse = currentCourse.removeMessage(messageId);
+    setMessageToDelete(messageId);
+  };
+
+  const handleConfirmDeleteMessage = () => {
+    const updatedCourse = currentCourse.removeMessage(messageToDelete);
     setCurrentCourse(updatedCourse);
     if (onCourseUpdate) onCourseUpdate(updatedCourse);
+    setMessageToDelete(null);
   };
 
   // Student handlers
@@ -174,12 +188,17 @@ const ManageCourse = ({ course, onBack, onCourseUpdate }) => {
   };
 
   const handleDeleteStudent = (studentId) => {
+    setStudentToDelete(studentId);
+  };
+
+  const handleConfirmDeleteStudent = () => {
     setCurrentCourse((prev) => {
       const updated = { ...prev };
-      updated.students = prev.students.filter((s) => s.id !== studentId);
+      updated.students = prev.students.filter((s) => s.id !== studentToDelete);
       return updated;
     });
     if (onCourseUpdate) onCourseUpdate(currentCourse);
+    setStudentToDelete(null);
   };
 
   if (!currentCourse) return <Typography>לא נמצא קורס</Typography>;
@@ -462,6 +481,33 @@ const ManageCourse = ({ course, onBack, onCourseUpdate }) => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <ConfirmationDialog
+        open={assignmentToDelete !== null}
+        onClose={() => setAssignmentToDelete(null)}
+        onConfirm={handleConfirmDeleteAssignment}
+        title="האם למחוק את המטלה?"
+        message="פעולה זו תמחק את המטלה באופן מוחלט. האם אתה בטוח?"
+        confirmText="כן, מחק מטלה"
+      />
+
+      <ConfirmationDialog
+        open={messageToDelete !== null}
+        onClose={() => setMessageToDelete(null)}
+        onConfirm={handleConfirmDeleteMessage}
+        title="האם למחוק את ההודעה?"
+        message="פעולה זו תמחק את ההודעה באופן מוחלט. האם אתה בטוח?"
+        confirmText="כן, מחק הודעה"
+      />
+
+      <ConfirmationDialog
+        open={studentToDelete !== null}
+        onClose={() => setStudentToDelete(null)}
+        onConfirm={handleConfirmDeleteStudent}
+        title="האם להסיר את הסטודנט מהקורס?"
+        message="פעולה זו תסיר את הסטודנט מרשימת המשתתפים בקורס. האם אתה בטוח?"
+        confirmText="כן, הסר את הסטודנט"
+      />
     </Box>
   );
 };
