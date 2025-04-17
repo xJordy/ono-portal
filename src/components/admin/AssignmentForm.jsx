@@ -1,15 +1,15 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { TextField, DialogContent, DialogActions, Button } from "@mui/material";
 
 const AssignmentForm = ({ assignment, onSubmit, onCancel, isEditMode }) => {
-  const [formData, setFormData] = React.useState({
+  const [formData, setFormData] = useState({
     title: "",
     description: "",
     dueDate: "",
   });
 
   // Initialize form when editing an assignment
-  React.useEffect(() => {
+  useEffect(() => {
     if (assignment) {
       setFormData({
         title: assignment.title || "",

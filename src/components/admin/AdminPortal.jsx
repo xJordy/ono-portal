@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Box, Typography, Card, CardContent } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import CourseForm from "./CourseForm";
 import CourseTable from "./CourseTable";
 import ManageCourse from "./ManageCourse";
@@ -51,6 +51,7 @@ export default function AdminPortal() {
     }
   }, []);
 
+  // USELESS ?
   // Save courses to localStorage when they change
   useEffect(() => {
     // Skip the first render completely
@@ -180,6 +181,7 @@ export default function AdminPortal() {
         
         <Box sx={{ 
           display: 'flex',
+          opacity: 0.8,
           bgcolor: '#fff9c4', // Light yellow background
           borderRadius: 2,
           boxShadow: '0px 2px 8px rgba(0,0,0,0.15)',
@@ -187,6 +189,7 @@ export default function AdminPortal() {
           flexGrow: 1,
           position: 'relative',
           borderLeft: '4px solid #f57c00', // Darker orange accent on the right edge
+          
         }}>
           <Box sx={{ 
             display: 'flex',
@@ -200,7 +203,7 @@ export default function AdminPortal() {
                 שימו לב - הודעה חשובה!
               </Typography>
             </Box>
-            <Typography variant="body2">
+            <Typography variant="body2" sx={{ opacity: 0.8 }}>
             נותרו לך 48 שעות להשלמת הזנת ציונים סופיים ו-72 שעות להשיב על כל ההודעות שטרם נענו בפורטל הקורס. אנא ודא עמידה בזמנים בהתאם להנחיות המוסד.</Typography>
           </Box>
         </Box>
