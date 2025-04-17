@@ -9,7 +9,15 @@ import {
 } from "@mui/material";
 import { Course } from "../../models/Models";
 
-const CourseForm = ({ onSave, courseToEdit }) => {
+const generateUniqueId = (existingIds) => {
+  let id;
+  do {
+    id = Math.floor(1000 + Math.random() * 9000).toString();
+  } while (existingIds.includes(id));
+  return id;
+};
+
+const CourseForm = ({ onSave, courseToEdit, courses = [] }) => {
   // Simple state to store form data
   const [name, setName] = useState("");
   const [instructor, setInstructor] = useState("");
@@ -53,9 +61,10 @@ const CourseForm = ({ onSave, courseToEdit }) => {
       });
       onSave(updatedCourse);
     } else {
-      // If adding, create a new course
+      // If adding, create a new course with a unique ID
+      const existingIds = courses.map(c => c.id);
       const newCourse = new Course({
-        id: Math.floor(1000 + Math.random() * 9000).toString(), // 4-digit random ID
+        id: generateUniqueId(existingIds),
         name,
         instructor,
         day,
