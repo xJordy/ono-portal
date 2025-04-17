@@ -22,6 +22,15 @@ import { saveCourseToLocalStorage } from "../../utils/localStorage";
 import AssignmentForm from "./AssignmentForm";
 import MessageForm from "./MessageForm";
 
+// Add this right after your imports
+const generateUniqueId = (existingIds) => {
+  let id;
+  do {
+    id = Math.floor(1000 + Math.random() * 9000).toString();
+  } while (existingIds.includes(id));
+  return id;
+};
+
 // Update the formatDateTime function to return separate date and time
 const formatDateTime = (timestamp) => {
   const date = new Intl.DateTimeFormat("he-IL", {
@@ -116,8 +125,9 @@ const ManageCourse = ({ course, onBack, onCourseUpdate }) => {
 
   // Message handlers
   const handleAddMessage = (formData) => {
+    const existingIds = currentCourse.messages.map(m => m.id);
     const message = new Message(
-      Date.now().toString(),
+      generateUniqueId(existingIds),
       formData.title,
       formData.content,
       formData.sender,
@@ -142,8 +152,9 @@ const ManageCourse = ({ course, onBack, onCourseUpdate }) => {
 
   // Student handlers
   const handleAddStudent = () => {
+    const existingIds = currentCourse.students?.map(s => s.id) || [];
     const student = new Student(
-      Date.now().toString(),
+      generateUniqueId(existingIds),
       newStudent.firstName,
       newStudent.lastName,
       newStudent.email
@@ -367,9 +378,10 @@ const ManageCourse = ({ course, onBack, onCourseUpdate }) => {
               setCurrentCourse(updatedCourse);
               if (onCourseUpdate) onCourseUpdate(updatedCourse);
             } else {
-              // Add new assignment
+              // Add new assignment with 4-digit ID
+              const existingIds = currentCourse.assignments?.map(a => a.id) || [];
               const assignment = new Assignment(
-                Date.now().toString(),
+                generateUniqueId(existingIds),
                 formData.title,
                 formData.description,
                 formData.dueDate
