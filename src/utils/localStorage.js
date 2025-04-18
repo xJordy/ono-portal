@@ -21,3 +21,17 @@ export const getCourseFromLocalStorage = (courseId) => {
   const courses = getCoursesFromLocalStorage();
   return courses.find(course => course.id === courseId);
 };
+
+// Student localStorage functions
+export const saveStudentsToLocalStorage = (students) => {
+  localStorage.setItem('students', JSON.stringify(students));
+};
+
+export const getStudentsFromLocalStorage = () => {
+  const studentsJSON = localStorage.getItem('students');
+  return studentsJSON ? JSON.parse(studentsJSON) : [];
+};
+
+export const clearStudentsFromLocalStorage = () => {
+  localStorage.removeItem('students');
+};

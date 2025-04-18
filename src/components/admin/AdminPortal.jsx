@@ -16,6 +16,13 @@ import {
 } from "../../utils/localStorage";
 import DashboardCards from "./DashboardCards";
 import InfoIcon from '@mui/icons-material/Info';
+import StudentForm from "./StudentForm";
+import StudentTable from "./StudentTable";
+import { Student } from "../../models/Models";
+import {
+  saveStudentsToLocalStorage,
+  getStudentsFromLocalStorage,
+} from "../../utils/localStorage";
 
 export default function AdminPortal() {
   // State to store all courses
@@ -34,6 +41,10 @@ export default function AdminPortal() {
     message: '',
     severity: 'success' // Default severity
   });
+
+  // Add these new states for students
+  const [students, setStudents] = useState([]);
+  const [studentToEdit, setStudentToEdit] = useState(null);
 
   // Load courses from localStorage when component mounts
   useEffect(() => {
@@ -60,20 +71,46 @@ export default function AdminPortal() {
       });
       setCourses(coursesInstances);
     }
+
+    // Add student loading code
+    const savedStudents = getStudentsFromLocalStorage();
+    console.log("Loading students from localStorage:", savedStudents);
+
+    if (savedStudents && savedStudents.length > 0) {
+      const studentInstances = savedStudents.map((student) => {
+        return new Student({
+          id: student.id,
+          firstName: student.firstName,
+          lastName: student.lastName,
+          email: student.email
+        });
+      });
+      setStudents(studentInstances);
+    }
   }, []);
 
-  // USELESS ?
   // Save courses to localStorage when they change
   useEffect(() => {
-    // Skip the first render completely
+    // Skip the first render completely || IS THIS USEFUL?
     if (isFirstRenderRef.current) {
       isFirstRenderRef.current = false;
       return;
     }
 
-    console.log("Saving courses after first render:", courses);
+    console.log("Saving courses:", courses);
     saveCoursesToLocalStorage(courses);
   }, [courses]);
+
+  // Save students to localStorage when they change
+  useEffect(() => {
+    // Skip the first render
+    if (isFirstRenderRef.current) {
+      return;
+    }
+
+    console.log("Saving students:", students);
+    saveStudentsToLocalStorage(students);
+  }, [students]);
 
   // Function to handle saving a new or edited course
   const handleSaveCourse = (course) => {
@@ -103,6 +140,36 @@ export default function AdminPortal() {
     setCurrentPage("courses");
   };
 
+  // Add these student management functions
+  const handleSaveStudent = (student) => {
+    if (studentToEdit) {
+      // Update existing student
+      setStudents((prev) => 
+        prev.map((s) => (s.id === student.id ? student : s))
+      );
+      setStudentToEdit(null);
+      
+      // Show success message
+      setSuccessAlert({
+        open: true,
+        message: `הסטודנט "${student.firstName} ${student.lastName}" עודכן בהצלחה!`,
+        severity: "success"
+      });
+    } else {
+      // Add new student
+      setStudents((prev) => [...prev, student]);
+      
+      // Show success message
+      setSuccessAlert({
+        open: true,
+        message: `הסטודנט "${student.firstName} ${student.lastName}" נוסף בהצלחה!`,
+        severity: "success"
+      });
+    }
+    // Navigate to students list after saving
+    setCurrentPage("students");
+  };
+
   // Handle closing the success alert
   const handleCloseAlert = (event, reason) => {
     if (reason === 'clickaway') {
@@ -115,6 +182,11 @@ export default function AdminPortal() {
   const handleEditCourse = (course) => {
     setCourseToEdit(course);
     setCurrentPage("addCourse");
+  };
+
+  const handleEditStudent = (student) => {
+    setStudentToEdit(student);
+    setCurrentPage("addStudent");
   };
 
   // Function to manage a course
@@ -137,6 +209,23 @@ export default function AdminPortal() {
       open: true,
       message: `${courseName} נמחק בהצלחה!`,
       severity: "info" // Blue alert for deletions
+    });
+  };
+
+  const handleDeleteStudent = (studentId) => {
+    // Find the student to get their name before deletion
+    const studentToDelete = students.find(student => student.id === studentId);
+    const studentName = studentToDelete ? 
+      `${studentToDelete.firstName} ${studentToDelete.lastName}` : "הסטודנט";
+    
+    // Delete the student
+    setStudents((prev) => prev.filter((student) => student.id !== studentId));
+    
+    // Show deletion success message
+    setSuccessAlert({
+      open: true,
+      message: `${studentName} נמחק בהצלחה!`,
+      severity: "info"
     });
   };
 
@@ -209,6 +298,48 @@ export default function AdminPortal() {
               course={selectedCourse}
               onBack={() => setCurrentPage("courses")}
               onCourseUpdate={handleCourseUpdate}
+            />
+          </Box>
+        );
+      case "students":
+        return (
+          <Box>
+            <Typography variant="h5" gutterBottom>
+              רשימת סטודנטים
+            </Typography>
+            <Box
+              sx={{
+                width: "100%",
+              }}
+            >
+              <StudentTable
+                students={students}
+                onEdit={handleEditStudent}
+                onDelete={handleDeleteStudent}
+                tableProps={{
+                  sx: { tableLayout: "fixed" },
+                }}
+                columnWidths={{
+                  id: "15%",
+                  firstName: "20%",
+                  lastName: "20%",
+                  email: "25%",
+                  actions: "20%",
+                }}
+              />
+            </Box>
+          </Box>
+        );
+      case "addStudent":
+        return (
+          <Box>
+            <Typography variant="h5" gutterBottom>
+              {studentToEdit ? "עריכת סטודנט" : "הוספת סטודנט חדש"}
+            </Typography>
+            <StudentForm 
+              onSave={handleSaveStudent} 
+              studentToEdit={studentToEdit}
+              students={students} 
             />
           </Box>
         );
