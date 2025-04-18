@@ -73,7 +73,7 @@ const DashboardCards = ({ courses }) => {
       </Typography>
 
       <Box sx={{ mt: 3, display: "flex", flexWrap: "wrap", gap: 3 }}>
-        <StatCard value={courses.length} label="קורסים פעילים" />
+        <StatCard value={courses.length} label="קורסים" />
         {/* TODO: Show messages from Students? */}
         <StatCard value={totalAssignments} label="מטלות" />
         <StatCard value={totalMessages} label="הודעות" />
