@@ -58,6 +58,11 @@ const DashboardCards = ({ courses }) => {
     0
   );
 
+  const totalStudents = courses.reduce(
+    (total, course) => total + (course.students?.length || 0),
+    0
+  );
+
   return (
     <Box>
       <Typography variant="h5" gutterBottom>
@@ -72,6 +77,7 @@ const DashboardCards = ({ courses }) => {
         {/* TODO: Show messages from Students? */}
         <StatCard value={totalAssignments} label="מטלות" />
         <StatCard value={totalMessages} label="הודעות" />
+        <StatCard value={totalStudents} label="סטודנטים" />
       </Box>
     </Box>
   );
