@@ -62,7 +62,7 @@ const CourseForm = ({ onSave, courseToEdit, courses = [] }) => {
       onSave(updatedCourse);
     } else {
       // If adding, create a new course with a unique ID
-      const existingIds = courses.map(c => c.id);
+      const existingIds = courses.map((c) => c.id);
       const newCourse = new Course({
         id: generateUniqueId(existingIds),
         name,

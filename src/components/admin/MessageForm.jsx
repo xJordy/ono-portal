@@ -29,7 +29,7 @@ const MessageForm = ({ onSubmit, onCancel }) => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <DialogContent sx={{ width: '550px', height: '300px' }}>
+      <DialogContent sx={{ width: "550px", height: "300px" }}>
         <TextField
           autoFocus
           margin="dense"

@@ -71,17 +71,19 @@ export class Course {
   removeAssignment(assignmentId) {
     return new Course({
       ...this,
-      assignments: this.assignments.filter(a => a.id !== assignmentId),
+      assignments: this.assignments.filter((a) => a.id !== assignmentId),
     });
   }
 
   updateAssignment(assignmentId, updates) {
-    const updatedAssignments = this.assignments.map(assignment =>
+    const updatedAssignments = this.assignments.map((assignment) =>
       assignment.id === assignmentId
         ? new Assignment(
             assignment.id,
             updates.title !== undefined ? updates.title : assignment.title,
-            updates.description !== undefined ? updates.description : assignment.description,
+            updates.description !== undefined
+              ? updates.description
+              : assignment.description,
             updates.dueDate !== undefined ? updates.dueDate : assignment.dueDate
           )
         : assignment
@@ -99,11 +101,11 @@ export class Course {
       messages: [...this.messages, message],
     });
   }
-  
+
   removeMessage(messageId) {
     return new Course({
       ...this,
-      messages: this.messages.filter(m => m.id !== messageId),
+      messages: this.messages.filter((m) => m.id !== messageId),
     });
   }
 
@@ -113,14 +115,14 @@ export class Course {
     student.enrollInCourse(this);
     return this;
   }
-  
+
   removeStudent(studentId) {
-    this.students = this.students.filter(s => s.id !== studentId);
+    this.students = this.students.filter((s) => s.id !== studentId);
     return this;
   }
-  
+
   updateStudent(studentId, updates) {
-    const index = this.students.findIndex(s => s.id === studentId);
+    const index = this.students.findIndex((s) => s.id === studentId);
     if (index !== -1) {
       this.students[index] = { ...this.students[index], ...updates };
     }

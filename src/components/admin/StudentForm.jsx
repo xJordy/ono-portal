@@ -40,13 +40,13 @@ export default function StudentForm({ onSave, studentToEdit, students = [] }) {
     } else {
       // If adding a new student, check if ID already exists
       const existingIds = students.map((s) => s.id);
-      
+
       if (existingIds.includes(id)) {
         // Show error - ID already exists
         alert("מספר תעודת זהות כבר קיים במערכת. אנא בחר מספר אחר.");
         return;
       }
-      
+
       const newStudent = new Student({
         id, // Use the ID input by the user
         firstName,

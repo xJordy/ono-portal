@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Box,
   Typography,
@@ -13,14 +13,22 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Divider,
   Snackbar,
-  Alert
+  Alert,
+  Checkbox,
+  FormControlLabel,
+  InputAdornment,
+  DialogContentText,
+  ListItemButton,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
+import SearchIcon from "@mui/icons-material/Search";
 import { Assignment, Message, Student } from "../../models/Models";
-import { saveCourseToLocalStorage } from "../../utils/localStorage";
+import {
+  saveCourseToLocalStorage,
+  getStudentsFromLocalStorage,
+} from "../../utils/localStorage";
 import AssignmentForm from "./AssignmentForm";
 import MessageForm from "./MessageForm";
 import ConfirmationDialog from "../common/ConfirmationDialog";
@@ -72,6 +80,9 @@ const ManageCourse = ({ course, onBack, onCourseUpdate }) => {
   const [currentCourse, setCurrentCourse] = useState(course);
   const [tabValue, setTabValue] = useState(0);
 
+  // Add this to your other state declarations
+  const isFirstRender = useRef(true);
+
   // Form states
   const [newAssignment, setNewAssignment] = useState({
     title: "",
@@ -81,32 +92,69 @@ const ManageCourse = ({ course, onBack, onCourseUpdate }) => {
 
   const [assignmentToEdit, setAssignmentToEdit] = useState(null);
 
-  const [newMessage, setNewMessage] = useState({
-    content: "",
-    sender: "מנהל",
-  });
-
-  const [newStudent, setNewStudent] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-  });
-
   // Dialog states
   const [openAssignmentDialog, setOpenAssignmentDialog] = useState(false);
   const [openMessageDialog, setOpenMessageDialog] = useState(false);
   const [openStudentDialog, setOpenStudentDialog] = useState(false);
   // Add these near your other state variables
-const [assignmentToDelete, setAssignmentToDelete] = useState(null);
-const [messageToDelete, setMessageToDelete] = useState(null);
-const [studentToDelete, setStudentToDelete] = useState(null);
+  const [assignmentToDelete, setAssignmentToDelete] = useState(null);
+  const [messageToDelete, setMessageToDelete] = useState(null);
+  const [studentToDelete, setStudentToDelete] = useState(null);
 
   // Add success alert state
   const [successAlert, setSuccessAlert] = useState({
     open: false,
-    message: '',
-    severity: 'success' // Default to success for adds/edits
+    message: "",
+    severity: "success", // Default to success for adds/edits
   });
+
+  // Add these state variables with your other state declarations
+  const [allStudents, setAllStudents] = useState([]);
+  const [selectedStudents, setSelectedStudents] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Add this effect to load all students when the component mounts
+  useEffect(() => {
+    const loadStudents = () => {
+      const students = getStudentsFromLocalStorage();
+      setAllStudents(students);
+    };
+
+    loadStudents();
+  }, []);
+
+  // Add this function to get available students (not already enrolled)
+  const getAvailableStudents = () => {
+    // Get IDs of students already in the course
+    const enrolledStudentIds =
+      currentCourse.students?.map((student) => student.id) || [];
+
+    // Filter out students who are already enrolled
+    const availableStudents = allStudents.filter(
+      (student) => !enrolledStudentIds.includes(student.id)
+    );
+
+    // Apply search filtering
+    if (!searchQuery) return availableStudents;
+
+    return availableStudents.filter(
+      (student) =>
+        student.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        student.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        student.id.includes(searchQuery)
+    );
+  };
+
+  // Add this function to handle student selection
+  const handleStudentSelection = (studentId) => {
+    setSelectedStudents((prevSelected) => {
+      if (prevSelected.includes(studentId)) {
+        return prevSelected.filter((id) => id !== studentId);
+      } else {
+        return [...prevSelected, studentId];
+      }
+    });
+  };
 
   // Handle tab change
   const handleTabChange = (event, newValue) => {
@@ -119,6 +167,44 @@ const [studentToDelete, setStudentToDelete] = useState(null);
       saveCourseToLocalStorage(currentCourse);
     }
   }, [currentCourse]);
+
+  // Add this near your other useEffects, just after the state definitions
+  const prevCourseRef = useRef(null);
+
+  useEffect(() => {
+    // Skip first render
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    // Deep comparison to check if course actually changed meaningfully
+    const hasChanged =
+      JSON.stringify(prevCourseRef.current) !== JSON.stringify(currentCourse);
+
+    if (onCourseUpdate && currentCourse && hasChanged) {
+      // Store current state to compare later
+      prevCourseRef.current = JSON.parse(JSON.stringify(currentCourse));
+
+      // Use a timeout to break the synchronous update cycle
+      const timeoutId = setTimeout(() => {
+        onCourseUpdate(currentCourse);
+      }, 0);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [currentCourse, onCourseUpdate]);
+
+  // Alternative - only update parent when specific actions occur
+  const shouldUpdateParent = useRef(false);
+
+  // And add a separate useEffect specifically for parent updates
+  useEffect(() => {
+    if (currentCourse && shouldUpdateParent.current) {
+      onCourseUpdate(currentCourse);
+      shouldUpdateParent.current = false;
+    }
+  }, [currentCourse, onCourseUpdate]);
 
   // Assignment handlers
   const handleEditAssignment = (assignment) => {
@@ -137,55 +223,52 @@ const [studentToDelete, setStudentToDelete] = useState(null);
 
   const handleConfirmDeleteAssignment = () => {
     // Get the assignment title before deletion for the message
-    const assignmentTitle = currentCourse.assignments.find(
-      a => a.id === assignmentToDelete
-    )?.title || "המטלה";
-    
+    const assignmentTitle =
+      currentCourse.assignments.find((a) => a.id === assignmentToDelete)
+        ?.title || "המטלה";
+
     const updatedCourse = currentCourse.removeAssignment(assignmentToDelete);
     setCurrentCourse(updatedCourse);
     if (onCourseUpdate) onCourseUpdate(updatedCourse);
-    
+
     // Show info message for deletion instead of success
     setSuccessAlert({
       open: true,
       message: `${assignmentTitle} נמחקה בהצלחה!`,
-      severity: "info"  // Change to blue
+      severity: "info", // Change to blue
     });
-    
+
     setAssignmentToDelete(null);
   };
 
   // Add handler to close alert
   const handleCloseAlert = (event, reason) => {
-    if (reason === 'clickaway') {
+    if (reason === "clickaway") {
       return;
     }
-    setSuccessAlert({...successAlert, open: false});
+    setSuccessAlert({ ...successAlert, open: false });
   };
 
   // Update the assignment submission handler
   const handleSubmitAssignment = (formData) => {
     if (assignmentToEdit) {
       // Update assignment with form data
-      const updatedCourse = currentCourse.updateAssignment(
-        assignmentToEdit,
-        {
-          title: formData.title,
-          description: formData.description,
-          dueDate: formData.dueDate,
-        }
-      );
+      const updatedCourse = currentCourse.updateAssignment(assignmentToEdit, {
+        title: formData.title,
+        description: formData.description,
+        dueDate: formData.dueDate,
+      });
       setCurrentCourse(updatedCourse);
       if (onCourseUpdate) onCourseUpdate(updatedCourse);
-      
+
       // Show success message
       setSuccessAlert({
         open: true,
-        message: `המטלה "${formData.title}" עודכנה בהצלחה!`
+        message: `המטלה "${formData.title}" עודכנה בהצלחה!`,
       });
     } else {
       // Add new assignment with 4-digit ID
-      const existingIds = currentCourse.assignments?.map(a => a.id) || [];
+      const existingIds = currentCourse.assignments?.map((a) => a.id) || [];
       const assignment = new Assignment(
         generateUniqueId(existingIds),
         formData.title,
@@ -195,11 +278,11 @@ const [studentToDelete, setStudentToDelete] = useState(null);
       const updatedCourse = currentCourse.addAssignment(assignment);
       setCurrentCourse(updatedCourse);
       if (onCourseUpdate) onCourseUpdate(updatedCourse);
-      
+
       // Show success message
       setSuccessAlert({
         open: true,
-        message: `המטלה "${formData.title}" נוספה בהצלחה!`
+        message: `המטלה "${formData.title}" נוספה בהצלחה!`,
       });
     }
     // Reset state and close dialog
@@ -210,7 +293,7 @@ const [studentToDelete, setStudentToDelete] = useState(null);
 
   // Message handlers
   const handleAddMessage = (formData) => {
-    const existingIds = currentCourse.messages.map(m => m.id);
+    const existingIds = currentCourse.messages.map((m) => m.id);
     const message = new Message(
       generateUniqueId(existingIds),
       formData.title,
@@ -221,15 +304,15 @@ const [studentToDelete, setStudentToDelete] = useState(null);
 
     const updatedCourse = currentCourse.addMessage(message);
     setCurrentCourse(updatedCourse);
-    
+
     if (onCourseUpdate) onCourseUpdate(updatedCourse);
-    
+
     // Show success message
     setSuccessAlert({
       open: true,
-      message: `ההודעה "${formData.title}" נוספה בהצלחה!`
+      message: `ההודעה "${formData.title}" נוספה בהצלחה!`,
     });
-    
+
     setOpenMessageDialog(false);
   };
 
@@ -239,44 +322,75 @@ const [studentToDelete, setStudentToDelete] = useState(null);
 
   const handleConfirmDeleteMessage = () => {
     // Get the message title before deletion for the message
-    const messageTitle = currentCourse.messages.find(
-      m => m.id === messageToDelete
-    )?.title || "ההודעה";
-    
+    const messageTitle =
+      currentCourse.messages.find((m) => m.id === messageToDelete)?.title ||
+      "ההודעה";
+
     const updatedCourse = currentCourse.removeMessage(messageToDelete);
     setCurrentCourse(updatedCourse);
     if (onCourseUpdate) onCourseUpdate(updatedCourse);
-    
+
     setSuccessAlert({
       open: true,
       message: `${messageTitle} נמחקה בהצלחה!`,
-      severity: "info"  // Change to blue
+      severity: "info", // Change to blue
     });
-    
+
     setMessageToDelete(null);
   };
 
   // Student handlers
-  const handleAddStudent = () => {
-    const existingIds = currentCourse.students?.map(s => s.id) || [];
-    const student = new Student(
-      generateUniqueId(existingIds),
-      newStudent.firstName,
-      newStudent.lastName,
-      newStudent.email
+  const handleAddStudents = () => {
+    if (selectedStudents.length === 0) return;
+
+    // Find the selected student objects
+    const studentsToAdd = allStudents.filter((student) =>
+      selectedStudents.includes(student.id)
     );
 
     setCurrentCourse((prev) => {
       const updated = { ...prev };
-      updated.students = [...(prev.students || []), student];
-      // Also enroll the student in the course
-      student.enrollInCourse(updated);
+      // Add each student to the course and enroll them
+      studentsToAdd.forEach((student) => {
+        // Only add if not already enrolled
+        if (!updated.students.some((s) => s.id === student.id)) {
+          // Create a new Student instance with the same properties
+          const studentInstance = new Student({
+            id: student.id,
+            firstName: student.firstName,
+            lastName: student.lastName,
+            email: student.email,
+          });
+
+          // Add to course students array
+          updated.students = [...updated.students, studentInstance];
+
+          // Enroll the student in the course
+          studentInstance.enrollInCourse(updated);
+        }
+      });
       return updated;
     });
 
-    setNewStudent({ firstName: "", lastName: "", email: "" });
+    // Flag that we need to update the parent
+    shouldUpdateParent.current = true;
+
+    // Show success message
+    const message =
+      selectedStudents.length === 1
+        ? "סטודנט אחד נרשם לקורס בהצלחה!"
+        : `${selectedStudents.length} סטודנטים נרשמו לקורס בהצלחה!`;
+
+    setSuccessAlert({
+      open: true,
+      message,
+      severity: "success",
+    });
+
+    // Reset selection and close dialog
+    setSelectedStudents([]);
+    setSearchQuery("");
     setOpenStudentDialog(false);
-    if (onCourseUpdate) onCourseUpdate(currentCourse);
   };
 
   const handleDeleteStudent = (studentId) => {
@@ -285,24 +399,29 @@ const [studentToDelete, setStudentToDelete] = useState(null);
 
   const handleConfirmDeleteStudent = () => {
     // Get student name before deletion for the message
-    const student = currentCourse.students.find(s => s.id === studentToDelete);
-    const studentName = student ? `${student.firstName} ${student.lastName}` : "הסטודנט/ית";
-    
+    const student = currentCourse.students.find(
+      (s) => s.id === studentToDelete
+    );
+    const studentName = student
+      ? `${student.firstName} ${student.lastName}`
+      : "הסטודנט/ית";
+
     setCurrentCourse((prev) => {
       const updated = { ...prev };
       updated.students = prev.students.filter((s) => s.id !== studentToDelete);
       return updated;
     });
-    
-    if (onCourseUpdate) onCourseUpdate(currentCourse);
-    
+
+    // Flag that we need to update the parent
+    shouldUpdateParent.current = true;
+
     // Show info message for deletion instead of success
     setSuccessAlert({
       open: true,
       message: `${studentName} הוסר/ה מהקורס בהצלחה!`,
-      severity: "info"  // Change to blue
+      severity: "info", // Change to blue
     });
-    
+
     setStudentToDelete(null);
   };
 
@@ -425,7 +544,9 @@ const [studentToDelete, setStudentToDelete] = useState(null);
                   {formatDateTime(message.timestamp).date} | שעה:{" "}
                   {formatDateTime(message.timestamp).time}
                 </Typography>
-                <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap'}}>{message.content}</Typography>
+                <Typography variant="body1" sx={{ whiteSpace: "pre-wrap" }}>
+                  {message.content}
+                </Typography>
               </Paper>
             ))
           ) : (
@@ -508,51 +629,97 @@ const [studentToDelete, setStudentToDelete] = useState(null);
         />
       </Dialog>
 
-      {/* Student Dialog */}
+      {/* Student Enrollment Dialog */}
       <Dialog
         open={openStudentDialog}
-        onClose={() => setOpenStudentDialog(false)}
-        // Add these props for better focus management
-        disableRestoreFocus
-        disableEnforceFocus={false}
-        disableAutoFocus={false}
+        onClose={() => {
+          setOpenStudentDialog(false);
+          setSelectedStudents([]);
+          setSearchQuery("");
+        }}
+        fullWidth
+        maxWidth="md"
       >
-        <DialogTitle>הוסף סטודנט לקורס</DialogTitle>
+        <DialogTitle>הוספת סטודנטים לקורס</DialogTitle>
         <DialogContent>
+          <DialogContentText sx={{ mb: 2 }}>
+            בחר סטודנטים מהרשימה כדי לרשום אותם לקורס.
+          </DialogContentText>
+
           <TextField
-            autoFocus
-            margin="dense"
-            label="שם פרטי"
             fullWidth
-            value={newStudent.firstName}
-            onChange={(e) =>
-              setNewStudent({ ...newStudent, firstName: e.target.value })
-            }
+            margin="normal"
+            placeholder="חיפוש לפי שם או ת.ז."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
           />
-          <TextField
-            margin="dense"
-            label="שם משפחה"
-            fullWidth
-            value={newStudent.lastName}
-            onChange={(e) =>
-              setNewStudent({ ...newStudent, lastName: e.target.value })
-            }
-          />
-          <TextField
-            margin="dense"
-            label="אימייל"
-            type="email"
-            fullWidth
-            value={newStudent.email}
-            onChange={(e) =>
-              setNewStudent({ ...newStudent, email: e.target.value })
-            }
-          />
+
+          <Box sx={{ mt: 2, maxHeight: 400, overflow: "auto" }}>
+            {getAvailableStudents().length > 0 ? (
+              <List>
+                {getAvailableStudents().map((student) => (
+                  <ListItemButton
+                    key={student.id}
+                    dense
+                    onClick={() => handleStudentSelection(student.id)}
+                  >
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={selectedStudents.includes(student.id)}
+                          onChange={() => handleStudentSelection(student.id)}
+                        />
+                      }
+                      label={
+                        <Box>
+                          <Typography variant="subtitle1">
+                            {student.firstName} {student.lastName}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            ת.ז: {student.id} | {student.email}
+                          </Typography>
+                        </Box>
+                      }
+                    />
+                  </ListItemButton>
+                ))}
+              </List>
+            ) : (
+              <Typography align="center" sx={{ p: 2 }}>
+                {searchQuery
+                  ? "לא נמצאו סטודנטים מתאימים לחיפוש."
+                  : "כל הסטודנטים כבר רשומים לקורס או שלא נוספו סטודנטים למערכת."}
+              </Typography>
+            )}
+          </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenStudentDialog(false)}>ביטול</Button>
-          <Button onClick={handleAddStudent} variant="contained">
-            הוסף
+          <Button
+            onClick={() => {
+              setOpenStudentDialog(false);
+              setSelectedStudents([]);
+              setSearchQuery("");
+            }}
+          >
+            ביטול
+          </Button>
+          <Button
+            onClick={handleAddStudents}
+            variant="contained"
+            disabled={selectedStudents.length === 0}
+          >
+            {selectedStudents.length === 0
+              ? "בחר סטודנטים"
+              : selectedStudents.length === 1
+              ? "הוסף סטודנט"
+              : `הוסף ${selectedStudents.length} סטודנטים`}
           </Button>
         </DialogActions>
       </Dialog>
@@ -588,12 +755,12 @@ const [studentToDelete, setStudentToDelete] = useState(null);
         open={successAlert.open}
         autoHideDuration={4000}
         onClose={handleCloseAlert}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert 
-          onClose={handleCloseAlert} 
-          severity={successAlert.severity || "success"} 
-          sx={{ width: '100%' }}
+        <Alert
+          onClose={handleCloseAlert}
+          severity={successAlert.severity || "success"}
+          sx={{ width: "100%" }}
         >
           {successAlert.message}
         </Alert>

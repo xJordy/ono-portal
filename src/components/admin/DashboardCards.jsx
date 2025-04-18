@@ -52,7 +52,7 @@ const DashboardCards = ({ courses }) => {
     (total, course) => total + (course.assignments?.length || 0),
     0
   );
-  
+
   const totalMessages = courses.reduce(
     (total, course) => total + (course.messages?.length || 0),
     0
@@ -70,7 +70,7 @@ const DashboardCards = ({ courses }) => {
       <Box sx={{ mt: 3, display: "flex", flexWrap: "wrap", gap: 3 }}>
         <StatCard value={courses.length} label="קורסים פעילים" />
         {/* TODO: Show messages from Students? */}
-        <StatCard value={totalAssignments} label="מטלות" /> 
+        <StatCard value={totalAssignments} label="מטלות" />
         <StatCard value={totalMessages} label="הודעות" />
       </Box>
     </Box>
