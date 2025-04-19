@@ -24,7 +24,7 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import SearchIcon from "@mui/icons-material/Search";
-import { Assignment, Message, Student } from "../../models/Models";
+import { Assignment, Message, Student, Course } from "../../models/Models";
 import {
   saveCourseToLocalStorage,
   getStudentsFromLocalStorage,
@@ -76,7 +76,7 @@ function TabPanel(props) {
 }
 
 // Update the component signature to accept the new prop
-const ManageCourse = ({ course, onBack, onCourseUpdate }) => {
+const ManageCourse = ({ course, onBack, onCourseUpdate, onStudentsUpdate }) => {
   const [currentCourse, setCurrentCourse] = useState(course);
   const [tabValue, setTabValue] = useState(0);
 
@@ -116,8 +116,19 @@ const ManageCourse = ({ course, onBack, onCourseUpdate }) => {
   // Add this effect to load all students when the component mounts
   useEffect(() => {
     const loadStudents = () => {
-      const students = getStudentsFromLocalStorage();
-      setAllStudents(students);
+      const studentsData = getStudentsFromLocalStorage();
+      // Create proper Student instances with methods
+      const studentInstances = studentsData.map(student => 
+        new Student({
+          id: student.id,
+          firstName: student.firstName,
+          lastName: student.lastName,
+          email: student.email,
+          birthDate: student.birthDate,
+          enrolledCourses: student.enrolledCourses || []
+        })
+      );
+      setAllStudents(studentInstances);
     };
 
     loadStudents();
@@ -343,54 +354,67 @@ const ManageCourse = ({ course, onBack, onCourseUpdate }) => {
   const handleAddStudents = () => {
     if (selectedStudents.length === 0) return;
 
-    // Find the selected student objects
+    // Find the selected student objects - ensure they're proper Student instances
     const studentsToAdd = allStudents.filter((student) =>
       selectedStudents.includes(student.id)
     );
 
+    // Track updated students for syncing back to the main state
+    const updatedStudents = [];
+
     setCurrentCourse((prev) => {
-      const updated = { ...prev };
-      // Add each student to the course and enroll them
-      studentsToAdd.forEach((student) => {
-        // Only add if not already enrolled
-        if (!updated.students.some((s) => s.id === student.id)) {
-          // Create a new Student instance with the same properties
-          const studentInstance = new Student({
-            id: student.id,
-            firstName: student.firstName,
-            lastName: student.lastName,
-            email: student.email,
-          });
-
-          // Add to course students array
-          updated.students = [...updated.students, studentInstance];
-
-          // Enroll the student in the course
-          studentInstance.enrollInCourse(updated);
-        }
+      // Create a proper Course instance with all methods
+      const updated = new Course({
+        id: prev.id,
+        name: prev.name,
+        instructor: prev.instructor,
+        day: prev.day,
+        time: prev.time,
+        descr: prev.descr,
+        assignments: [...prev.assignments],
+        messages: [...prev.messages],
+        students: [...prev.students],
       });
+      
+      // Now use the proper enrollStudent method!
+      studentsToAdd.forEach((student) => {
+        // Create a proper Student instance to ensure the method works
+        const studentInstance = new Student({
+          id: student.id,
+          firstName: student.firstName,
+          lastName: student.lastName,
+          email: student.email,
+          birthDate: student.birthDate,
+          enrolledCourses: [...(student.enrolledCourses || [])]
+        });
+        
+        // Use the class method - this will handle both sides of the relationship
+        updated.enrollStudent(studentInstance);
+        
+        // Track the updated student for parent state update
+        updatedStudents.push(studentInstance);
+      });
+      
       return updated;
     });
 
-    // Flag that we need to update the parent
+    // Update global students state with the enrolled students
+    if (updatedStudents.length > 0 && onStudentsUpdate) {
+      onStudentsUpdate(updatedStudents);
+    }
+
+    // Rest of your code (success messages, etc.)
     shouldUpdateParent.current = true;
-
-    // Show success message
-    const message =
-      selectedStudents.length === 1
-        ? "סטודנט אחד נרשם לקורס בהצלחה!"
-        : `${selectedStudents.length} סטודנטים נרשמו לקורס בהצלחה!`;
-
     setSuccessAlert({
       open: true,
-      message,
+      message: selectedStudents.length === 1
+        ? "סטודנט אחד נוסף לקורס בהצלחה!"
+        : `${selectedStudents.length} סטודנטים נוספו לקורס בהצלחה!`,
       severity: "success",
     });
-
-    // Reset selection and close dialog
+    setOpenStudentDialog(false);
     setSelectedStudents([]);
     setSearchQuery("");
-    setOpenStudentDialog(false);
   };
 
   const handleDeleteStudent = (studentId) => {

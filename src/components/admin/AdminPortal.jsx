@@ -111,6 +111,8 @@ export default function AdminPortal() {
           email: student.email,
           // Don't convert to Date here, keep as string until needed in form
           birthDate: student.birthDate,
+          // Make sure to include the enrolled courses when creating student instances
+          enrolledCourses: student.enrolledCourses || []
         });
       });
       setStudents(studentInstances);
@@ -283,6 +285,16 @@ export default function AdminPortal() {
     );
   };
 
+  // Add this function to handle student updates
+  const handleStudentsUpdate = (updatedStudents) => {
+    setStudents(prevStudents => {
+      return prevStudents.map(student => {
+        const updatedStudent = updatedStudents.find(s => s.id === student.id);
+        return updatedStudent || student;
+      });
+    });
+  };
+
   // Render the appropriate content based on current page
   const renderContent = () => {
     switch (currentPage) {
@@ -334,6 +346,7 @@ export default function AdminPortal() {
               course={selectedCourse}
               onBack={() => setCurrentPage("courses")}
               onCourseUpdate={handleCourseUpdate}
+              onStudentsUpdate={handleStudentsUpdate} // Add this prop
             />
           </Box>
         );

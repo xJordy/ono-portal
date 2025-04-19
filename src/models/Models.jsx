@@ -31,9 +31,10 @@ export class Student {
   }
 
   enrollInCourse(course) {
-    // Store only the course ID instead of the entire course object
-    this.enrolledCourseIds = this.enrolledCourseIds || [];
-    this.enrolledCourseIds.push(course.id);
+    // Fix: Use enrolledCourses instead of enrolledCourseIds
+    if (!this.enrolledCourses.includes(course.id)) {
+      this.enrolledCourses.push(course.id);
+    }
   }
 }
 
@@ -112,8 +113,14 @@ export class Course {
 
   // Student methods
   enrollStudent(student) {
-    this.students.push(student);
-    student.enrollInCourse(this);
+    // Check if student is already enrolled
+    if (!this.students.some(s => s.id === student.id)) {
+      // Add the student to the course's student list
+      this.students.push(student);
+      
+      // Re-enable this line to update the student's enrolledCourses list
+      student.enrollInCourse(this);
+    }
     return this;
   }
 
