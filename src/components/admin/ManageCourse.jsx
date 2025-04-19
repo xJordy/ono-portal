@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   Box,
   Typography,
@@ -76,8 +76,8 @@ function TabPanel(props) {
   );
 }
 
-// Update the component signature to accept the new prop
-const ManageCourse = ({ course, onBack, onCourseUpdate, onStudentsUpdate }) => {
+// Add the students prop to the component
+const ManageCourse = ({ course, onBack, onCourseUpdate, onStudentsUpdate, students }) => {
   const [currentCourse, setCurrentCourse] = useState(course);
   const [tabValue, setTabValue] = useState(0);
 
@@ -135,26 +135,22 @@ const ManageCourse = ({ course, onBack, onCourseUpdate, onStudentsUpdate }) => {
     loadStudents();
   }, []);
 
-  // Add this function to get available students (not already enrolled)
+  // Update the getAvailableStudents function
   const getAvailableStudents = () => {
-    // Get IDs of students already in the course
-    const enrolledStudentIds =
-      currentCourse.students?.map((student) => student.id) || [];
+    // Show all students, but we'll mark enrolled ones differently
+    let filteredStudents = allStudents;
 
-    // Filter out students who are already enrolled
-    const availableStudents = allStudents.filter(
-      (student) => !enrolledStudentIds.includes(student.id)
-    );
+    // Apply search filtering if needed
+    if (searchQuery) {
+      filteredStudents = filteredStudents.filter(
+        (student) =>
+          student.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          student.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          student.id.includes(searchQuery)
+      );
+    }
 
-    // Apply search filtering
-    if (!searchQuery) return availableStudents;
-
-    return availableStudents.filter(
-      (student) =>
-        student.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        student.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        student.id.includes(searchQuery)
-    );
+    return filteredStudents;
   };
 
   // Add this function to handle student selection
@@ -355,7 +351,7 @@ const ManageCourse = ({ course, onBack, onCourseUpdate, onStudentsUpdate }) => {
   const handleAddStudents = () => {
     if (selectedStudents.length === 0) return;
 
-    // Find the selected student objects - ensure they're proper Student instances
+    // Find the selected student objects
     const studentsToAdd = allStudents.filter((student) =>
       selectedStudents.includes(student.id)
     );
@@ -374,7 +370,7 @@ const ManageCourse = ({ course, onBack, onCourseUpdate, onStudentsUpdate }) => {
         descr: prev.descr,
         assignments: [...prev.assignments],
         messages: [...prev.messages],
-        students: [...prev.students],
+        studentIds: [...(prev.studentIds || [])],
       });
       
       // Now use the proper enrollStudent method!
@@ -385,23 +381,26 @@ const ManageCourse = ({ course, onBack, onCourseUpdate, onStudentsUpdate }) => {
           firstName: student.firstName,
           lastName: student.lastName,
           email: student.email,
-          birthDate: student.birthDate, // Ensure birthDate is included
+          birthDate: student.birthDate,
           enrolledCourses: [...(student.enrolledCourses || [])]
         });
         
+        // Enroll student - this adds the course ID to student's enrolledCourses
         updated.enrollStudent(studentInstance);
+        
+        // Add to updated students list to sync to global state
         updatedStudents.push(studentInstance);
       });
       
       return updated;
     });
 
-    // Update global students state with the enrolled students
+    // Update global students state 
     if (updatedStudents.length > 0 && onStudentsUpdate) {
       onStudentsUpdate(updatedStudents);
     }
 
-    // Rest of your code (success messages, etc.)
+    // Rest of your code remains the same
     shouldUpdateParent.current = true;
     setSuccessAlert({
       open: true,
@@ -421,16 +420,16 @@ const ManageCourse = ({ course, onBack, onCourseUpdate, onStudentsUpdate }) => {
 
   const handleConfirmDeleteStudent = () => {
     // Get student name before deletion for the message
-    const student = currentCourse.students.find(
-      (s) => s.id === studentToDelete
-    );
+    const student = courseStudents.find(s => s.id === studentToDelete);
     const studentName = student
       ? `${student.firstName} ${student.lastName}`
       : "הסטודנט/ית";
 
     setCurrentCourse((prev) => {
-      const updated = { ...prev };
-      updated.students = prev.students.filter((s) => s.id !== studentToDelete);
+      const updated = new Course({
+        ...prev,
+        studentIds: prev.studentIds ? prev.studentIds.filter(id => id !== studentToDelete) : []
+      });
       return updated;
     });
 
@@ -441,11 +440,26 @@ const ManageCourse = ({ course, onBack, onCourseUpdate, onStudentsUpdate }) => {
     setSuccessAlert({
       open: true,
       message: `${studentName} הוסר/ה מהקורס בהצלחה!`,
-      severity: "info", // Change to blue
+      severity: "info",
     });
 
     setStudentToDelete(null);
   };
+
+  // Get the actual student objects for this course
+  const courseStudents = useMemo(() => {
+    // Safely handle both old and new data structures
+    if (currentCourse.studentIds && Array.isArray(currentCourse.studentIds)) {
+      return currentCourse.studentIds.map(id => 
+        allStudents.find(student => student.id === id)
+      ).filter(Boolean);
+    } else if (currentCourse.students && Array.isArray(currentCourse.students)) {
+      // Support legacy format that uses students array directly
+      return currentCourse.students;
+    }
+    // Default to empty array if neither exists
+    return [];
+  }, [currentCourse, allStudents]);
 
   if (!currentCourse) return <Typography>לא נמצא קורס</Typography>;
 
@@ -589,11 +603,10 @@ const ManageCourse = ({ course, onBack, onCourseUpdate, onStudentsUpdate }) => {
           </Button>
         </Box>
 
-        {currentCourse.students && currentCourse.students.length > 0 ? (
+        {courseStudents.length > 0 ? (
           <StudentTable
-            students={currentCourse.students}
+            students={courseStudents}
             onDelete={(studentId) => {
-              // Directly set the studentToDelete without showing the table's confirmation dialog
               setStudentToDelete(studentId);
             }}
             tableProps={{
@@ -611,7 +624,7 @@ const ManageCourse = ({ course, onBack, onCourseUpdate, onStudentsUpdate }) => {
               edit: false,
               delete: true
             }}
-            skipConfirmation={true} // Add this prop to bypass the StudentTable confirmation
+            skipConfirmation={true}
           />
         ) : (
           <Typography>אין סטודנטים רשומים לקורס זה עדיין.</Typography>
@@ -691,32 +704,50 @@ const ManageCourse = ({ course, onBack, onCourseUpdate, onStudentsUpdate }) => {
           <Box sx={{ mt: 2, maxHeight: 400, overflow: "auto" }}>
             {getAvailableStudents().length > 0 ? (
               <List>
-                {getAvailableStudents().map((student) => (
-                  <ListItemButton
-                    key={student.id}
-                    dense
-                    onClick={() => handleStudentSelection(student.id)}
-                  >
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={selectedStudents.includes(student.id)}
-                          onChange={() => handleStudentSelection(student.id)}
-                        />
-                      }
-                      label={
-                        <Box>
-                          <Typography variant="subtitle1">
-                            {student.firstName} {student.lastName}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            ת.ז: {student.id} | {student.email}
-                          </Typography>
-                        </Box>
-                      }
-                    />
-                  </ListItemButton>
-                ))}
+                {getAvailableStudents().map((student) => {
+                  // Check if student is already enrolled in this course
+                  const isEnrolled = currentCourse.studentIds?.includes(student.id);
+                  
+                  return (
+                    <ListItemButton
+                      key={student.id}
+                      dense
+                      onClick={() => !isEnrolled && handleStudentSelection(student.id)}
+                      sx={{
+                        backgroundColor: isEnrolled ? 'rgba(76, 175, 80, 0.08)' : 'transparent',
+                        '&:hover': {
+                          backgroundColor: isEnrolled ? 'rgba(76, 175, 80, 0.12)' : 'rgba(0, 0, 0, 0.04)',
+                        }
+                      }}
+                    >
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={isEnrolled || selectedStudents.includes(student.id)}
+                            onChange={() => handleStudentSelection(student.id)}
+                            disabled={isEnrolled} // Disable if already enrolled
+                            color={isEnrolled ? "success" : "primary"}
+                          />
+                        }
+                        label={
+                          <Box>
+                            <Typography variant="subtitle1">
+                              {student.firstName} {student.lastName}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              ת.ז: {student.id} | {student.email}
+                            </Typography>
+                            {isEnrolled && (
+                              <Typography variant="caption" color="success.main" sx={{ display: 'block' }}>
+                                כבר רשום בקורס זה
+                              </Typography>
+                            )}
+                          </Box>
+                        }
+                      />
+                    </ListItemButton>
+                  );
+                })}
               </List>
             ) : (
               <Typography align="center" sx={{ p: 2 }}>

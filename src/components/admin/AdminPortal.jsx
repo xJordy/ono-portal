@@ -56,7 +56,7 @@ export default function AdminPortal() {
           descr: course.descr,
           assignments: [],
           messages: [],
-          students: [],
+          studentIds: [], // Initialize with empty studentIds array
         });
 
         // Restore assignments if they exist
@@ -80,19 +80,13 @@ export default function AdminPortal() {
           );
         }
 
-        // Restore students if they exist - create proper Student instances
-        if (course.students && Array.isArray(course.students)) {
-          newCourse.students = course.students.map(
-            (s) =>
-              new Student({
-                id: s.id,
-                firstName: s.firstName,
-                lastName: s.lastName,
-                email: s.email,
-                birthDate: s.birthDate, // Make sure to include this
-                enrolledCourses: s.enrolledCourses || []
-              })
-          );
+        // Handle both old and new formats for student data
+        if (course.studentIds && Array.isArray(course.studentIds)) {
+          // New format - just copy the student IDs
+          newCourse.studentIds = [...course.studentIds];
+        } else if (course.students && Array.isArray(course.students)) {
+          // Old format - extract IDs from student objects
+          newCourse.studentIds = course.students.map(s => s.id);
         }
 
         return newCourse;
@@ -287,15 +281,26 @@ export default function AdminPortal() {
     );
   };
 
-  // Add this function to handle student updates
-  const handleStudentsUpdate = (updatedStudents) => {
-    setStudents(prevStudents => {
-      return prevStudents.map(student => {
-        const updatedStudent = updatedStudents.find(s => s.id === student.id);
-        return updatedStudent || student;
-      });
+  // Update handleStudentsUpdate to correctly merge enrolledCourses
+const handleStudentsUpdate = (updatedStudents) => {
+  setStudents(prevStudents => {
+    return prevStudents.map(student => {
+      const updatedStudent = updatedStudents.find(s => s.id === student.id);
+      if (updatedStudent) {
+        // Create a new Student instance with the updated enrolledCourses
+        return new Student({
+          id: student.id,
+          firstName: student.firstName,
+          lastName: student.lastName,
+          email: student.email,
+          birthDate: student.birthDate,
+          enrolledCourses: updatedStudent.enrolledCourses || []
+        });
+      }
+      return student;
     });
-  };
+  });
+};
 
   // Render the appropriate content based on current page
   const renderContent = () => {

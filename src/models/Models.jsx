@@ -49,7 +49,7 @@ export class Course {
     descr,
     assignments = [],
     messages = [],
-    students = [],
+    studentIds = [], // Store IDs instead of full student objects!
   }) {
     this.id = id;
     this.name = name;
@@ -59,7 +59,7 @@ export class Course {
     this.descr = descr;
     this.assignments = assignments;
     this.messages = messages;
-    this.students = students;
+    this.studentIds = studentIds; // Just IDs
   }
 
   // Immutable Assignment Methods
@@ -111,28 +111,31 @@ export class Course {
     });
   }
 
-  // Student methods
+  // Add a method to get actual student objects when needed
+  getStudents(allStudents) {
+    return this.studentIds.map(id => 
+      allStudents.find(student => student.id === id)
+    ).filter(Boolean); // Remove any undefined values
+  }
+
+  // Update enrollment method to store IDs only
   enrollStudent(student) {
-    // Check if student is already enrolled
-    if (!this.students.some(s => s.id === student.id)) {
-      // Add the student to the course's student list
-      this.students.push(student);
-      
-      // Re-enable this line to update the student's enrolledCourses list
+    if (!this.studentIds.includes(student.id)) {
+      this.studentIds.push(student.id);
       student.enrollInCourse(this);
     }
     return this;
   }
 
   removeStudent(studentId) {
-    this.students = this.students.filter((s) => s.id !== studentId);
+    this.studentIds = this.studentIds.filter(id => id !== studentId);
     return this;
   }
 
   updateStudent(studentId, updates) {
-    const index = this.students.findIndex((s) => s.id === studentId);
+    const index = this.studentIds.findIndex((id) => id === studentId);
     if (index !== -1) {
-      this.students[index] = { ...this.students[index], ...updates };
+      this.studentIds[index] = { ...this.studentIds[index], ...updates };
     }
     return this;
   }
