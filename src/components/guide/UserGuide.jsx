@@ -69,8 +69,8 @@ const UserGuide = () => {
           sx={{ mb: 2 }}
         >
           <Tab icon={<AdminPanelSettingsIcon />} label="פורטל מנהל" />
-          <Tab icon={<SchoolIcon />} label="פורטל סטודנט" />
-          <Tab icon={<HelpIcon />} label="שאלות נפוצות" />
+          {/* <Tab icon={<SchoolIcon />} label="פורטל סטודנט" /> */}
+          {/* <Tab icon={<HelpIcon />} label="שאלות נפוצות" /> */}
         </Tabs>
 
         {/* Admin Portal Guide */}
