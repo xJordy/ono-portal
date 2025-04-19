@@ -1,6 +1,7 @@
 import React from 'react';
 import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
 import { Link } from 'react-router-dom';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 
 const Header = () => {
   return (
@@ -10,6 +11,14 @@ const Header = () => {
           ONO Portal
         </Typography>
         <Box>
+          <Button 
+            color="inherit" 
+            component={Link} 
+            to="/guide"
+            startIcon={<HelpOutlineIcon />}
+          >
+            מדריך למשתמש
+          </Button>
           <Button color="inherit" component={Link} to="/admin">פורטל מנהל</Button>
           <Button color="inherit" component={Link} to="/student">פורטל הסטודנט</Button>
         </Box>
