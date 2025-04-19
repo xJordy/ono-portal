@@ -14,21 +14,25 @@ import ViewListIcon from "@mui/icons-material/ViewList";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import { Groups, PersonAddAlt1, PlaylistAdd } from "@mui/icons-material";
 
-const Sidebar = ({ onNavigate, currentPage }) => {
-  // Simple navigation items
-  const navItems = [
-    { id: "dashboard", label: "לוח בקרה", icon: <DashboardIcon /> },
-    { id: "courses", label: "רשימת קורסים", icon: <ViewListIcon /> },
-    { id: "addCourse", label: "הוספת קורס", icon: <PlaylistAdd /> },
-    { id: "students", label: "רשימת סטודנטים", icon: <Groups /> },
-    { id: "addStudent", label: "הוספת סטודנט", icon: <PersonAddAlt1 /> },
-  ];
+const defaultNavItems = [
+  { id: "dashboard", label: "לוח בקרה", icon: <DashboardIcon /> },
+  { id: "courses", label: "רשימת קורסים", icon: <ViewListIcon /> },
+  { id: "addCourse", label: "הוספת קורס", icon: <PlaylistAdd /> },
+  { id: "students", label: "רשימת סטודנטים", icon: <Groups /> },
+  { id: "addStudent", label: "הוספת סטודנט", icon: <PersonAddAlt1 /> },
+];
 
+const Sidebar = ({ 
+  onNavigate, 
+  currentPage, 
+  navItems = defaultNavItems, 
+  title = "ניהול המערכת" 
+}) => {
   return (
     <Paper sx={{ width: 200, height: "100%" }}>
       <Box sx={{ p: 2 }}>
         <Typography variant="h6" align="center">
-          ניהול המערכת
+          {title}
         </Typography>
       </Box>
 

@@ -9,7 +9,7 @@ import {
   Paper,
   Button,
 } from "@mui/material";
-import ConfirmationDialog from "../common/ConfirmationDialog";
+import ConfirmationDialog from "../ConfirmationDialog"
 
 const CourseTable = ({
   courses,
@@ -18,6 +18,8 @@ const CourseTable = ({
   onManage,
   tableProps,
   columnWidths = {},
+  actionButtons = { edit: true, delete: true, manage: true, view: false },
+  buttonLabels = { manage: "ניהול", view: "צפה", edit: "ערוך", delete: "מחיקה" }
 }) => {
   const [courseToDelete, setCourseToDelete] = useState(null);
 
@@ -29,6 +31,12 @@ const CourseTable = ({
   const handleConfirmDelete = () => {
     onDelete(courseToDelete);
     setCourseToDelete(null);
+  };
+  
+  const handleRowClick = (course) => {
+    if (onEdit && actionButtons.edit) {
+      onEdit(course);
+    }
   };
 
   return (
@@ -53,16 +61,16 @@ const CourseTable = ({
             {courses.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} align="center">
-                  אין קורסים עדיין. הוסף את הקורס הראשון בתפריט בצד ימין!
+                  אין קורסים עדיין.
                 </TableCell>
               </TableRow>
             ) : (
               courses.map((course) => (
                 <TableRow
                   key={course.id}
-                  onClick={() => onEdit(course)}
+                  onClick={() => handleRowClick(course)}
                   sx={{
-                    cursor: "pointer",
+                    cursor: onEdit && actionButtons.edit ? "pointer" : "default",
                     transition: "background-color 0.3s",
                     "&:hover": {
                       backgroundColor: "rgba(0, 0, 0, 0.04)",
@@ -82,26 +90,45 @@ const CourseTable = ({
                   <TableCell
                     onClick={(e) => e.stopPropagation()} // Prevent row click when clicking buttons
                   >
-                    <Button
-                      variant="outlined"
-                      color="primary"
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onManage(course);
-                      }}
-                    >
-                      ניהול
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      size="small"
-                      onClick={(e) => handleDeleteClick(course.id, e)}
-                      sx={{ ml: 1 }}
-                    >
-                      מחיקה
-                    </Button>
+                    {actionButtons.manage && onManage && (
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onManage(course);
+                        }}
+                      >
+                        {buttonLabels.manage}
+                      </Button>
+                    )}
+                    
+                    {actionButtons.view && onManage && (
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onManage(course);
+                        }}
+                      >
+                        {buttonLabels.view}
+                      </Button>
+                    )}
+                    
+                    {actionButtons.delete && onDelete && (
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        size="small"
+                        onClick={(e) => handleDeleteClick(course.id, e)}
+                        sx={{ ml: 1 }}
+                      >
+                        {buttonLabels.delete}
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))
@@ -110,14 +137,16 @@ const CourseTable = ({
         </Table>
       </TableContainer>
 
-      <ConfirmationDialog
-        open={courseToDelete !== null}
-        onClose={() => setCourseToDelete(null)}
-        onConfirm={handleConfirmDelete}
-        title="האם למחוק את הקורס?"
-        message="פעולה זו תמחק את הקורס לצמיתות ותגרום לאובדן כל המטלות, הודעות ורשימות הסטודנטים הקשורים אליו. האם אתה בטוח?"
-        confirmText="כן, מחק קורס"
-      />
+      {onDelete && (
+        <ConfirmationDialog
+          open={courseToDelete !== null}
+          onClose={() => setCourseToDelete(null)}
+          onConfirm={handleConfirmDelete}
+          title="האם למחוק את הקורס?"
+          message="פעולה זו תמחק את הקורס לצמיתות ותגרום לאובדן כל המטלות, הודעות ורשימות הסטודנטים הקשורים אליו. האם אתה בטוח?"
+          confirmText="כן, מחק קורס"
+        />
+      )}
     </>
   );
 };

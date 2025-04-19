@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Box, Typography, Snackbar, Alert } from "@mui/material";
 import CourseForm from "./CourseForm";
-import CourseTable from "./CourseTable";
+import CourseTable from "../common/shared/CourseTable";
 import ManageCourse from "./ManageCourse";
-import Sidebar from "./Sidebar";
+import Sidebar from "../common/shared/Sidebar";
 import { Assignment, Course, Student, Message } from "../../models/Models";
 import {
   saveCoursesToLocalStorage,
   getCoursesFromLocalStorage,
 } from "../../utils/localStorage";
-import DashboardCards from "./DashboardCards";
+import DashboardCards from "../common/shared/DashboardCards";
 import InfoIcon from "@mui/icons-material/Info";
 import StudentForm from "./StudentForm";
 import StudentTable from "./StudentTable";

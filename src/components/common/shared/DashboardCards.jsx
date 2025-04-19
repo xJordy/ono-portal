@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, Typography, Card, CardContent } from "@mui/material";
 
-const DashboardCards = ({ courses, students }) => {
+const DashboardCards = ({ courses, students, userRole = "admin" }) => {
   // Reusable card component to avoid repetition
   const StatCard = ({ value, label }) => (
     <Card
@@ -64,14 +64,19 @@ const DashboardCards = ({ courses, students }) => {
         לוח בקרה
       </Typography>
       <Typography gutterBottom>
-        ברוך הבא למערכת ניהול הקורסים. השתמש בתפריט כדי לנווט.
+        {userRole === "admin" 
+          ? "ברוך הבא למערכת ניהול הקורסים. השתמש בתפריט כדי לנווט."
+          : "ברוך הבא לפורטל הסטודנט. כאן תוכל לצפות בקורסים, מטלות והודעות."
+        }
       </Typography>
 
       <Box sx={{ mt: 3, display: "flex", flexWrap: "wrap", gap: 3 }}>
         <StatCard value={courses.length} label="קורסים" />
         <StatCard value={totalAssignments} label="מטלות" />
         <StatCard value={totalMessages} label="הודעות" />
-        <StatCard value={students.length} label="סטודנטים" />
+        {userRole === "admin" && students && (
+          <StatCard value={students.length} label="סטודנטים" />
+        )}
       </Box>
     </Box>
   );
