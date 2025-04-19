@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, Typography, Card, CardContent } from "@mui/material";
 
-const DashboardCards = ({ courses }) => {
+const DashboardCards = ({ courses, students }) => {
   // Reusable card component to avoid repetition
   const StatCard = ({ value, label }) => (
     <Card
@@ -58,11 +58,6 @@ const DashboardCards = ({ courses }) => {
     0
   );
 
-  const totalStudents = courses.reduce(
-    (total, course) => total + (course.students?.length || 0),
-    0
-  );
-
   return (
     <Box>
       <Typography variant="h5" gutterBottom>
@@ -74,10 +69,9 @@ const DashboardCards = ({ courses }) => {
 
       <Box sx={{ mt: 3, display: "flex", flexWrap: "wrap", gap: 3 }}>
         <StatCard value={courses.length} label="קורסים" />
-        {/* TODO: Show messages from Students? */}
         <StatCard value={totalAssignments} label="מטלות" />
         <StatCard value={totalMessages} label="הודעות" />
-        <StatCard value={totalStudents} label="סטודנטים" />
+        <StatCard value={students.length} label="סטודנטים" />
       </Box>
     </Box>
   );

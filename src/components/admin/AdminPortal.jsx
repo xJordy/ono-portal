@@ -109,7 +109,8 @@ export default function AdminPortal() {
           firstName: student.firstName,
           lastName: student.lastName,
           email: student.email,
-          birthDate: student.birthDate ? new Date(student.birthDate) : null, // Convert string date to Date object
+          // Don't convert to Date here, keep as string until needed in form
+          birthDate: student.birthDate,
         });
       });
       setStudents(studentInstances);
@@ -286,7 +287,7 @@ export default function AdminPortal() {
   const renderContent = () => {
     switch (currentPage) {
       case "dashboard":
-        return <DashboardCards courses={courses} />;
+        return <DashboardCards courses={courses} students={students} />;
       case "courses":
         return (
           <Box>

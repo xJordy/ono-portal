@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Student } from "../../models/Models";
 import { Box, Button, Paper, TextField, Typography } from "@mui/material";
-// Add this import
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+// Import dayjs
+import dayjs from "dayjs";
 
 export default function StudentForm({ onSave, studentToEdit, students = [] }) {
   // Simple state to store form data
@@ -10,7 +11,6 @@ export default function StudentForm({ onSave, studentToEdit, students = [] }) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  // Add birthDate state
   const [birthDate, setBirthDate] = useState(null);
 
   // Update form when editing a student
@@ -20,9 +20,12 @@ export default function StudentForm({ onSave, studentToEdit, students = [] }) {
       setFirstName(studentToEdit.firstName);
       setLastName(studentToEdit.lastName);
       setEmail(studentToEdit.email);
-      // Set birthDate if it exists
+      
+      // Convert birthDate to a dayjs object if it exists
       if (studentToEdit.birthDate) {
-        setBirthDate(studentToEdit.birthDate);
+        setBirthDate(dayjs(studentToEdit.birthDate));
+      } else {
+        setBirthDate(null);
       }
     } else {
       // Reset form when not editing
@@ -37,32 +40,32 @@ export default function StudentForm({ onSave, studentToEdit, students = [] }) {
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    // Convert dayjs object to native Date before saving
+    const birthDateValue = birthDate ? birthDate.toDate() : null;
+
     if (studentToEdit) {
-      // If editing, update the existing student
       const updatedStudent = new Student({
         id: studentToEdit.id,
         firstName,
         lastName,
         email,
-        birthDate, // Include birthDate
+        birthDate: birthDateValue,
       });
       onSave(updatedStudent);
     } else {
-      // If adding a new student, check if ID already exists
       const existingIds = students.map((s) => s.id);
 
       if (existingIds.includes(id)) {
-        // Show error - ID already exists
         alert("מספר תעודת זהות כבר קיים במערכת. אנא בחר מספר אחר.");
         return;
       }
 
       const newStudent = new Student({
-        id, // Use the ID input by the user
+        id,
         firstName,
         lastName,
         email,
-        birthDate, // Include birthDate
+        birthDate: birthDateValue,
       });
       onSave(newStudent);
     }
