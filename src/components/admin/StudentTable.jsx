@@ -25,18 +25,27 @@ const formatDate = (dateValue) => {
   }).format(date);
 };
 
+// Add skipConfirmation to props
 export default function StudentTable({
   students,
   onEdit,
   onDelete,
   tableProps,
   columnWidths = {},
+  actionButtons = { edit: true, delete: true },
+  skipConfirmation = false // Add this prop
 }) {
   const [studentToDelete, setStudentToDelete] = useState(null);
 
   const handleDeleteClick = (studentId, e) => {
     e.stopPropagation();
-    setStudentToDelete(studentId);
+    if (skipConfirmation) {
+      // Call delete directly if confirmation is skipped
+      onDelete(studentId);
+    } else {
+      // Show confirmation dialog as usual
+      setStudentToDelete(studentId);
+    }
   };
 
   const handleConfirmDelete = () => {
@@ -81,23 +90,27 @@ export default function StudentTable({
                   {/* Add birth date cell */}
                   <TableCell>{formatDate(student.birthDate)}</TableCell>
                   <TableCell>
-                    <Button
-                      variant="outlined"
-                      color="primary"
-                      size="small"
-                      onClick={() => onEdit(student)}
-                    >
-                      ערוך
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      size="small"
-                      sx={{ ml: 1 }}
-                      onClick={(e) => handleDeleteClick(student.id, e)}
-                    >
-                      מחק
-                    </Button>
+                    {actionButtons.edit && (
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        size="small"
+                        onClick={() => onEdit(student)}
+                      >
+                        ערוך
+                      </Button>
+                    )}
+                    {actionButtons.delete && (
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        size="small"
+                        sx={{ ml: actionButtons.edit ? 1 : 0 }}
+                        onClick={(e) => handleDeleteClick(student.id, e)}
+                      >
+                        מחק
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))

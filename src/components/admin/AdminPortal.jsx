@@ -89,6 +89,8 @@ export default function AdminPortal() {
                 firstName: s.firstName,
                 lastName: s.lastName,
                 email: s.email,
+                birthDate: s.birthDate, // Make sure to include this
+                enrolledCourses: s.enrolledCourses || []
               })
           );
         }

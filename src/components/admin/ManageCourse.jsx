@@ -32,6 +32,7 @@ import {
 import AssignmentForm from "./AssignmentForm";
 import MessageForm from "./MessageForm";
 import ConfirmationDialog from "../common/ConfirmationDialog";
+import StudentTable from "./StudentTable";
 
 // Add this right after your imports
 const generateUniqueId = (existingIds) => {
@@ -378,20 +379,17 @@ const ManageCourse = ({ course, onBack, onCourseUpdate, onStudentsUpdate }) => {
       
       // Now use the proper enrollStudent method!
       studentsToAdd.forEach((student) => {
-        // Create a proper Student instance to ensure the method works
+        // Create a proper Student instance with ALL properties
         const studentInstance = new Student({
           id: student.id,
           firstName: student.firstName,
           lastName: student.lastName,
           email: student.email,
-          birthDate: student.birthDate,
+          birthDate: student.birthDate, // Ensure birthDate is included
           enrolledCourses: [...(student.enrolledCourses || [])]
         });
         
-        // Use the class method - this will handle both sides of the relationship
         updated.enrollStudent(studentInstance);
-        
-        // Track the updated student for parent state update
         updatedStudents.push(studentInstance);
       });
       
@@ -591,28 +589,33 @@ const ManageCourse = ({ course, onBack, onCourseUpdate, onStudentsUpdate }) => {
           </Button>
         </Box>
 
-        <List>
-          {currentCourse.students && currentCourse.students.length > 0 ? (
-            currentCourse.students.map((student) => (
-              <Paper key={student.id} sx={{ mb: 2, p: 2 }}>
-                <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                  <Typography variant="h6">
-                    {student.firstName} {student.lastName}
-                  </Typography>
-                  <IconButton
-                    onClick={() => handleDeleteStudent(student.id)}
-                    color="error"
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
-                <Typography variant="body2">{student.email}</Typography>
-              </Paper>
-            ))
-          ) : (
-            <Typography>אין סטודנטים רשומים לקורס זה עדיין.</Typography>
-          )}
-        </List>
+        {currentCourse.students && currentCourse.students.length > 0 ? (
+          <StudentTable
+            students={currentCourse.students}
+            onDelete={(studentId) => {
+              // Directly set the studentToDelete without showing the table's confirmation dialog
+              setStudentToDelete(studentId);
+            }}
+            tableProps={{
+              sx: { tableLayout: "fixed" },
+            }}
+            columnWidths={{
+              id: "15%",
+              firstName: "15%",
+              lastName: "20%",
+              email: "30%",
+              birthDate: "15%",
+              actions: "15%",
+            }}
+            actionButtons={{
+              edit: false,
+              delete: true
+            }}
+            skipConfirmation={true} // Add this prop to bypass the StudentTable confirmation
+          />
+        ) : (
+          <Typography>אין סטודנטים רשומים לקורס זה עדיין.</Typography>
+        )}
       </TabPanel>
 
       {/* Assignment Dialog */}
