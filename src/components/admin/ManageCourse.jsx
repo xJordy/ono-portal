@@ -499,7 +499,7 @@ const ManageCourse = ({ course, onBack, onCourseUpdate }) => {
                   </Box>
                 </Box>
                 <Typography variant="body2" sx={{ mb: 1 }}>
-                  תאריך הגשה: {assignment.dueDate}
+                  תאריך הגשה: {formatDateTime(assignment.dueDate).date}
                 </Typography>
                 <Typography variant="body1">
                   {assignment.description}

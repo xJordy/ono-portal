@@ -68,7 +68,7 @@ export default function StudentForm({ onSave, studentToEdit, students = [] }) {
   return (
     <Paper sx={{ p: 2, mb: 3 }}>
       <Typography variant="h6" gutterBottom>
-        {studentToEdit ? "עריכת סטודנט" : "מלא את פרטי הסטודנט"}
+        {studentToEdit ? "ערוך את פרטי סטודנט" : "מלא את פרטי הסטודנט"}
       </Typography>
       <Box component="form" onSubmit={handleSubmit}>
         <TextField
