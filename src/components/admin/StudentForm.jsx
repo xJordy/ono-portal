@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Student } from "../../models/Models";
 import { Box, Button, Paper, TextField, Typography } from "@mui/material";
+// Add this import
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 
 export default function StudentForm({ onSave, studentToEdit, students = [] }) {
   // Simple state to store form data
@@ -8,6 +10,8 @@ export default function StudentForm({ onSave, studentToEdit, students = [] }) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  // Add birthDate state
+  const [birthDate, setBirthDate] = useState(null);
 
   // Update form when editing a student
   useEffect(() => {
@@ -16,12 +20,17 @@ export default function StudentForm({ onSave, studentToEdit, students = [] }) {
       setFirstName(studentToEdit.firstName);
       setLastName(studentToEdit.lastName);
       setEmail(studentToEdit.email);
+      // Set birthDate if it exists
+      if (studentToEdit.birthDate) {
+        setBirthDate(studentToEdit.birthDate);
+      }
     } else {
       // Reset form when not editing
       setId("");
       setFirstName("");
       setLastName("");
       setEmail("");
+      setBirthDate(null);
     }
   }, [studentToEdit]);
 
@@ -35,6 +44,7 @@ export default function StudentForm({ onSave, studentToEdit, students = [] }) {
         firstName,
         lastName,
         email,
+        birthDate, // Include birthDate
       });
       onSave(updatedStudent);
     } else {
@@ -52,6 +62,7 @@ export default function StudentForm({ onSave, studentToEdit, students = [] }) {
         firstName,
         lastName,
         email,
+        birthDate, // Include birthDate
       });
       onSave(newStudent);
     }
@@ -62,6 +73,7 @@ export default function StudentForm({ onSave, studentToEdit, students = [] }) {
       setFirstName("");
       setLastName("");
       setEmail("");
+      setBirthDate(null);
     }
   };
 
@@ -96,6 +108,23 @@ export default function StudentForm({ onSave, studentToEdit, students = [] }) {
           label="שם משפחה"
           value={lastName}
           onChange={(e) => setLastName(e.target.value)}
+          required
+        />
+
+        {/* Update DatePicker to use dd/MM/yyyy format */}
+        <DatePicker
+          label="תאריך לידה"
+          value={birthDate}
+          onChange={(newValue) => setBirthDate(newValue)}
+          format="DD/MM/YYYY"  // Add this line for date format
+          slotProps={{ 
+            textField: { 
+              fullWidth: true,
+              margin: "normal",
+              required: true,
+              placeholder: "DD/MM/YYYY" // Add placeholder to guide the user
+            } 
+          }}
           required
         />
 

@@ -21,12 +21,13 @@ export class Message {
 
 // Simple Student model
 export class Student {
-  constructor({ id, firstName, lastName, email }) {
+  constructor({ id, firstName, lastName, email, birthDate, enrolledCourses = [] }) {
     this.id = id;
     this.firstName = firstName;
     this.lastName = lastName;
     this.email = email;
-    this.enrolledCourses = [];
+    this.birthDate = birthDate;
+    this.enrolledCourses = enrolledCourses; // Array of course IDs
   }
 
   enrollInCourse(course) {

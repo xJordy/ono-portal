@@ -11,6 +11,20 @@ import {
 import React, { useState } from "react";
 import ConfirmationDialog from "../common/ConfirmationDialog";
 
+// Add this helper function to format date
+const formatDate = (dateValue) => {
+  if (!dateValue) return "-";
+  
+  // Handle both Date objects and dayjs objects
+  const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
+  
+  return new Intl.DateTimeFormat("he-IL", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
+};
+
 export default function StudentTable({
   students,
   onEdit,
@@ -36,7 +50,7 @@ export default function StudentTable({
         <Table sx={{ width: "100%", ...(tableProps?.sx || {}) }}>
           <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
             <TableRow>
-              <TableCell width={columnWidths.id}>מספר תעודת זהות</TableCell>
+              <TableCell width={columnWidths.id}>תעודת זהות</TableCell>
               <TableCell
                 width={columnWidths.firstName}
                 sx={{ whiteSpace: "normal", wordWrap: "break-word" }}
@@ -45,13 +59,15 @@ export default function StudentTable({
               </TableCell>
               <TableCell width={columnWidths.lastName}>שם משפחה</TableCell>
               <TableCell width={columnWidths.email}>אימייל</TableCell>
+              {/* Add birth date header */}
+              <TableCell width={columnWidths.birthDate}>תאריך לידה</TableCell>
               <TableCell width={columnWidths.actions}>פעולות</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {students.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} align="center">
+                <TableCell colSpan={6} align="center">
                   אין סטודנטים עדיין. הוסף את הסטודנט הראשון בתפריט בצד ימין!
                 </TableCell>
               </TableRow>
@@ -62,6 +78,8 @@ export default function StudentTable({
                   <TableCell>{student.firstName}</TableCell>
                   <TableCell>{student.lastName}</TableCell>
                   <TableCell>{student.email}</TableCell>
+                  {/* Add birth date cell */}
+                  <TableCell>{formatDate(student.birthDate)}</TableCell>
                   <TableCell>
                     <Button
                       variant="outlined"

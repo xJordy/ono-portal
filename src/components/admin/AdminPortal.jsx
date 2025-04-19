@@ -109,6 +109,7 @@ export default function AdminPortal() {
           firstName: student.firstName,
           lastName: student.lastName,
           email: student.email,
+          birthDate: student.birthDate ? new Date(student.birthDate) : null, // Convert string date to Date object
         });
       });
       setStudents(studentInstances);
@@ -265,6 +266,11 @@ export default function AdminPortal() {
     if (pageId === "addCourse" && currentPage !== "addCourse") {
       setCourseToEdit(null);
     }
+
+    // Reset studentToEdit when navigating to add student page
+    if (pageId === "addStudent" && currentPage !== "addStudent") {
+      setStudentToEdit(null);
+    }
   };
 
   // Function to handle course updates
@@ -349,10 +355,11 @@ export default function AdminPortal() {
                   sx: { tableLayout: "fixed" },
                 }}
                 columnWidths={{
-                  id: "15%",
-                  firstName: "20%",
-                  lastName: "20%",
+                  id: "10%",
+                  firstName: "10%",
+                  lastName: "15%",
                   email: "25%",
+                  birthDate: "10%",  // Add width for birthDate column
                   actions: "20%",
                 }}
               />
