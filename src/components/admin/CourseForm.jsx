@@ -18,33 +18,50 @@ const generateUniqueId = (existingIds) => {
 };
 
 const CourseForm = ({ onSave, courseToEdit, courses = [] }) => {
-  // Simple state to store form data
-  const [name, setName] = useState("");
-  const [instructor, setInstructor] = useState("");
-  const [day, setDay] = useState("");
-  const [time, setTime] = useState("");
-  const [descr, setDescr] = useState("");
+  // Use a single formData object instead of individual state variables
+  const [formData, setFormData] = useState({
+    name: "",
+    instructor: "",
+    day: "",
+    time: "",
+    descr: ""
+  });
 
   // Update form when editing a course
   useEffect(() => {
     if (courseToEdit) {
-      setName(courseToEdit.name);
-      setInstructor(courseToEdit.instructor);
-      setDay(courseToEdit.day);
-      setTime(courseToEdit.time);
-      setDescr(courseToEdit.descr);
+      // Set all form fields at once
+      setFormData({
+        name: courseToEdit.name || "",
+        instructor: courseToEdit.instructor || "",
+        day: courseToEdit.day || "",
+        time: courseToEdit.time || "",
+        descr: courseToEdit.descr || ""
+      });
     } else {
       // Reset form when not editing
-      setName("");
-      setInstructor("");
-      setDay("");
-      setTime("");
-      setDescr("");
+      setFormData({
+        name: "",
+        instructor: "",
+        day: "",
+        time: "",
+        descr: ""
+      });
     }
   }, [courseToEdit]);
 
+  // Handle change for all form fields
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    const { name, instructor, day, time, descr } = formData;
 
     if (courseToEdit) {
       // If editing, update the existing course
@@ -76,11 +93,13 @@ const CourseForm = ({ onSave, courseToEdit, courses = [] }) => {
 
     // Clear form after submission (if not editing)
     if (!courseToEdit) {
-      setName("");
-      setInstructor("");
-      setDay("");
-      setTime("");
-      setDescr("");
+      setFormData({
+        name: "",
+        instructor: "",
+        day: "",
+        time: "",
+        descr: ""
+      });
     }
   };
 
@@ -95,8 +114,9 @@ const CourseForm = ({ onSave, courseToEdit, courses = [] }) => {
           fullWidth
           margin="normal"
           label="שם הקורס"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
           required
         />
 
@@ -104,8 +124,9 @@ const CourseForm = ({ onSave, courseToEdit, courses = [] }) => {
           fullWidth
           margin="normal"
           label="שם המרצה"
-          value={instructor}
-          onChange={(e) => setInstructor(e.target.value)}
+          name="instructor"
+          value={formData.instructor}
+          onChange={handleChange}
           required
         />
 
@@ -116,8 +137,9 @@ const CourseForm = ({ onSave, courseToEdit, courses = [] }) => {
             fullWidth
             margin="normal"
             label="יום"
-            value={day}
-            onChange={(e) => setDay(e.target.value)}
+            name="day"
+            value={formData.day}
+            onChange={handleChange}
             required
           >
             <MenuItem value="יום א׳">ראשון</MenuItem>
@@ -140,8 +162,9 @@ const CourseForm = ({ onSave, courseToEdit, courses = [] }) => {
             }}
             margin="normal"
             label="שעה"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
+            name="time"
+            value={formData.time}
+            onChange={handleChange}
             required
           />
         </Box>
@@ -150,8 +173,9 @@ const CourseForm = ({ onSave, courseToEdit, courses = [] }) => {
           fullWidth
           margin="normal"
           label="תיאור"
-          value={descr}
-          onChange={(e) => setDescr(e.target.value)}
+          name="descr"
+          value={formData.descr}
+          onChange={handleChange}
           multiline
           rows={4}
           variant="outlined"
