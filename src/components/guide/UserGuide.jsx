@@ -22,6 +22,7 @@ import HelpIcon from '@mui/icons-material/Help';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import GroupsIcon from '@mui/icons-material/Groups';
+import InfoIcon from '@mui/icons-material/Info';
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -132,7 +133,7 @@ const UserGuide = () => {
                 <List>
                   <ListItem>
                     <ListItemIcon><CheckCircleIcon fontSize="small" /></ListItemIcon>
-                    <ListItemText primary='לחץ על "הוספת קורס" בתפריט הצד' />
+                    <ListItemText primary='לחץ על "הוסף קורס חדש" בראש טבלת הקורסים' />
                   </ListItem>
                   <ListItem>
                     <ListItemIcon><CheckCircleIcon fontSize="small" /></ListItemIcon>
@@ -193,7 +194,7 @@ const UserGuide = () => {
                 <List>
                   <ListItem>
                     <ListItemIcon><CheckCircleIcon fontSize="small" /></ListItemIcon>
-                    <ListItemText primary='לחץ על "הוספת סטודנט" בתפריט הצד' />
+                    <ListItemText primary='לחץ על "הוסף סטודנט חדש" בראש טבלת הסטודנטים' />
                   </ListItem>
                   <ListItem>
                     <ListItemIcon><CheckCircleIcon fontSize="small" /></ListItemIcon>
@@ -238,6 +239,59 @@ const UserGuide = () => {
                   <ListItem>
                     <ListItemIcon><CheckCircleIcon fontSize="small" /></ListItemIcon>
                     <ListItemText primary='לחץ על "הוסף סטודנט" ובחר מהרשימה' />
+                  </ListItem>
+                </List>
+              </Box>
+            </AccordionDetails>
+          </Accordion>
+
+          <Accordion>
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              aria-controls="panel4a-content"
+              id="panel4a-header"
+            >
+              <Typography variant="h6" sx={{ display: "flex", alignItems: "center" }}>
+                <InfoIcon sx={{ mr: 1 }} /> מאפיינים נוספים
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Typography paragraph>
+                מערכת הניהול כוללת מספר מאפיינים שימושיים להקלה על העבודה.
+              </Typography>
+              
+              <Box sx={{ mb: 2 }}>
+                <Typography fontWeight="bold">אימות טופס:</Typography>
+                <List>
+                  <ListItem>
+                    <ListItemIcon><CheckCircleIcon fontSize="small" /></ListItemIcon>
+                    <ListItemText primary="המערכת מספקת משוב מיידי על שגיאות הזנה" />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemIcon><CheckCircleIcon fontSize="small" /></ListItemIcon>
+                    <ListItemText primary="שדות חובה מסומנים בכוכבית (*)" />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemIcon><CheckCircleIcon fontSize="small" /></ListItemIcon>
+                    <ListItemText primary="הודעות שגיאה מסבירות את הבעיה באופן ברור" />
+                  </ListItem>
+                </List>
+              </Box>
+
+              <Box sx={{ mb: 2 }}>
+                <Typography fontWeight="bold">ניווט מבוסס כתובת:</Typography>
+                <List>
+                  <ListItem>
+                    <ListItemIcon><CheckCircleIcon fontSize="small" /></ListItemIcon>
+                    <ListItemText primary="ניתן לסמן עמודים ספציפיים במועדפים" />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemIcon><CheckCircleIcon fontSize="small" /></ListItemIcon>
+                    <ListItemText primary="כפתורי החזרה והקדימה בדפדפן עובדים כצפוי" />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemIcon><CheckCircleIcon fontSize="small" /></ListItemIcon>
+                    <ListItemText primary="ניתן לשתף קישורים ישירים לעמודים ספציפיים" />
                   </ListItem>
                 </List>
               </Box>
