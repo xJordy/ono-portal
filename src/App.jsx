@@ -14,8 +14,11 @@ function App() {
       <Container>
         <Routes>
             <Route path="/" element={<StudentPortal />} />
-            <Route path="/admin" element={<AdminPortal />} />
-            <Route path="/student" element={<StudentPortal />} />
+            
+            {/* Admin routes with nested structure */}
+            <Route path="/admin/*" element={<AdminPortal />} />
+            
+            <Route path="/student/*" element={<StudentPortal />} />
             <Route path="/guide" element={<UserGuide />} />
         </Routes>
       </Container>

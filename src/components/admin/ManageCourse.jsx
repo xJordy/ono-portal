@@ -33,6 +33,9 @@ import AssignmentForm from "./AssignmentForm";
 import MessageForm from "./MessageForm";
 import ConfirmationDialog from "../common/ConfirmationDialog";
 import StudentTable from "./StudentTable";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+
+// TODO: REFRESHING THE BROWSER PAGE IN ANY TAB CREATES AN ERROR
 
 // Add this right after your imports
 const generateUniqueId = (existingIds) => {
@@ -165,8 +168,16 @@ const ManageCourse = ({ course, onBack, onCourseUpdate, onStudentsUpdate, studen
   };
 
   // Handle tab change
+  const { id } = useParams(); // Get course ID from URL
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // When changing tabs, update URL
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
+    // Remove this URL navigation - it's causing the redirect
+    // const tabPaths = ["assignments", "messages", "students"];
+    // navigate(`/admin/courses/manage/${id}/${tabPaths[newValue]}`);
   };
 
   // Save changes to localStorage whenever the course changes
@@ -448,18 +459,23 @@ const ManageCourse = ({ course, onBack, onCourseUpdate, onStudentsUpdate, studen
 
   // Get the actual student objects for this course
   const courseStudents = useMemo(() => {
-    // Safely handle both old and new data structures
-    if (currentCourse.studentIds && Array.isArray(currentCourse.studentIds)) {
-      return currentCourse.studentIds.map(id => 
-        allStudents.find(student => student.id === id)
-      ).filter(Boolean);
-    } else if (currentCourse.students && Array.isArray(currentCourse.students)) {
-      // Support legacy format that uses students array directly
-      return currentCourse.students;
-    }
-    // Default to empty array if neither exists
+  // First check if currentCourse exists
+  if (!currentCourse) {
     return [];
-  }, [currentCourse, allStudents]);
+  }
+  
+  // Then safely handle both old and new data structures
+  if (currentCourse.studentIds && Array.isArray(currentCourse.studentIds)) {
+    return currentCourse.studentIds.map(id => 
+      allStudents.find(student => student.id === id)
+    ).filter(Boolean);
+  } else if (currentCourse.students && Array.isArray(currentCourse.students)) {
+    // Support legacy format that uses students array directly
+    return currentCourse.students;
+  }
+  // Default to empty array if neither exists
+  return [];
+}, [currentCourse, allStudents]);
 
   if (!currentCourse) return <Typography>לא נמצא קורס</Typography>;
 

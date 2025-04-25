@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { Box, Typography, Snackbar, Alert } from "@mui/material";
 import CourseForm from "./CourseForm";
 import CourseTable from "../common/shared/CourseTable";
@@ -25,8 +26,6 @@ export default function AdminPortal() {
   const [courseToEdit, setCourseToEdit] = useState(null);
   // State to track which course is being managed
   const [selectedCourse, setSelectedCourse] = useState(null);
-  // State for navigation
-  const [currentPage, setCurrentPage] = useState("dashboard");
   // Ref to track initialization
   const isFirstRenderRef = useRef(true);
   // Add state for the success message
@@ -39,6 +38,26 @@ export default function AdminPortal() {
   // Add these new states for students
   const [students, setStudents] = useState([]);
   const [studentToEdit, setStudentToEdit] = useState(null);
+  
+  // React Router hooks
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Determine current page from URL
+  const currentPage = getPageFromPath(location.pathname);
+
+  // Function to convert URL path to sidebar navigation item
+  function getPageFromPath(path) {
+    if (path === "/admin" || path === "/admin/") return "dashboard";
+    if (path.includes("/admin/courses/new")) return "addCourse";
+    if (path.includes("/admin/courses/edit")) return "addCourse"; 
+    if (path.includes("/admin/courses/manage")) return "manageCourse";
+    if (path.includes("/admin/courses")) return "courses";
+    if (path.includes("/admin/students/new")) return "addStudent";
+    if (path.includes("/admin/students/edit")) return "addStudent";
+    if (path.includes("/admin/students")) return "students";
+    return "dashboard";
+  }
 
   // Load courses from localStorage when component mounts
   useEffect(() => {
@@ -105,9 +124,7 @@ export default function AdminPortal() {
           firstName: student.firstName,
           lastName: student.lastName,
           email: student.email,
-          // Don't convert to Date here, keep as string until needed in form
           birthDate: student.birthDate,
-          // Make sure to include the enrolled courses when creating student instances
           enrolledCourses: student.enrolledCourses || []
         });
       });
@@ -117,7 +134,7 @@ export default function AdminPortal() {
 
   // Save courses to localStorage when they change
   useEffect(() => {
-    // Skip the first render completely || IS THIS USEFUL?
+    // Skip the first render completely
     if (isFirstRenderRef.current) {
       isFirstRenderRef.current = false;
       return;
@@ -163,7 +180,7 @@ export default function AdminPortal() {
       });
     }
     // Navigate to courses list after saving
-    setCurrentPage("courses");
+    navigate("/admin/courses");
   };
 
   // Add these student management functions
@@ -193,7 +210,7 @@ export default function AdminPortal() {
       });
     }
     // Navigate to students list after saving
-    setCurrentPage("students");
+    navigate("/admin/students");
   };
 
   // Handle closing the success alert
@@ -207,18 +224,18 @@ export default function AdminPortal() {
   // Function to start editing a course
   const handleEditCourse = (course) => {
     setCourseToEdit(course);
-    setCurrentPage("addCourse");
+    navigate(`/admin/courses/edit/${course.id}`);
   };
 
   const handleEditStudent = (student) => {
     setStudentToEdit(student);
-    setCurrentPage("addStudent");
+    navigate(`/admin/students/edit/${student.id}`);
   };
 
   // Function to manage a course
   const handleManageCourse = (course) => {
     setSelectedCourse(course);
-    setCurrentPage("manageCourse");
+    navigate(`/admin/courses/manage/${course.id}`);
   };
 
   // Function to delete a course
@@ -258,17 +275,28 @@ export default function AdminPortal() {
     });
   };
 
-  // Handle navigation changes
+  // Handle navigation changes - now uses React Router
   const handleNavigate = (pageId) => {
-    setCurrentPage(pageId);
-    // Reset courseToEdit when navigating to add course page
-    if (pageId === "addCourse" && currentPage !== "addCourse") {
-      setCourseToEdit(null);
-    }
-
-    // Reset studentToEdit when navigating to add student page
-    if (pageId === "addStudent" && currentPage !== "addStudent") {
-      setStudentToEdit(null);
+    switch (pageId) {
+      case "dashboard":
+        navigate("/admin");
+        break;
+      case "courses":
+        navigate("/admin/courses");
+        break;
+      case "addCourse":
+        setCourseToEdit(null);
+        navigate("/admin/courses/new");
+        break;
+      case "students":
+        navigate("/admin/students");
+        break;
+      case "addStudent":
+        setStudentToEdit(null);
+        navigate("/admin/students/new");
+        break;
+      default:
+        navigate("/admin");
     }
   };
 
@@ -282,127 +310,34 @@ export default function AdminPortal() {
   };
 
   // Update handleStudentsUpdate to correctly merge enrolledCourses
-const handleStudentsUpdate = (updatedStudents) => {
-  setStudents(prevStudents => {
-    return prevStudents.map(student => {
-      const updatedStudent = updatedStudents.find(s => s.id === student.id);
-      if (updatedStudent) {
-        // Create a new Student instance with the updated enrolledCourses
-        return new Student({
-          id: student.id,
-          firstName: student.firstName,
-          lastName: student.lastName,
-          email: student.email,
-          birthDate: student.birthDate,
-          enrolledCourses: updatedStudent.enrolledCourses || []
-        });
-      }
-      return student;
+  const handleStudentsUpdate = (updatedStudents) => {
+    setStudents(prevStudents => {
+      return prevStudents.map(student => {
+        const updatedStudent = updatedStudents.find(s => s.id === student.id);
+        if (updatedStudent) {
+          // Create a new Student instance with the updated enrolledCourses
+          return new Student({
+            id: student.id,
+            firstName: student.firstName,
+            lastName: student.lastName,
+            email: student.email,
+            birthDate: student.birthDate,
+            enrolledCourses: updatedStudent.enrolledCourses || []
+          });
+        }
+        return student;
+      });
     });
-  });
-};
+  };
 
-  // Render the appropriate content based on current page
-  const renderContent = () => {
-    switch (currentPage) {
-      case "dashboard":
-        return <DashboardCards courses={courses} students={students} />;
-      case "courses":
-        return (
-          <Box>
-            <Typography variant="h5" gutterBottom>
-              רשימת קורסים
-            </Typography>
-            <Box
-              sx={{
-                width: "100%",
-              }}
-            >
-              <CourseTable
-                courses={courses}
-                onEdit={handleEditCourse}
-                onDelete={handleDeleteCourse}
-                onManage={handleManageCourse}
-                tableProps={{
-                  sx: { tableLayout: "fixed" }, // Forces table to respect column widths
-                }}
-                columnWidths={{
-                  id: "10%",
-                  name: "30%",
-                  instructor: "20%",
-                  schedule: "10%",
-                  actions: "30%",
-                }}
-              />
-            </Box>
-          </Box>
-        );
-      case "addCourse":
-        return (
-          <Box>
-            <Typography variant="h5" gutterBottom>
-              {courseToEdit ? "עריכת קורס" : "הוספת קורס חדש"}
-            </Typography>
-            <CourseForm onSave={handleSaveCourse} courseToEdit={courseToEdit} />
-          </Box>
-        );
-      case "manageCourse":
-        return (
-          <Box>
-            <ManageCourse
-              course={selectedCourse}
-              onBack={() => setCurrentPage("courses")}
-              onCourseUpdate={handleCourseUpdate}
-              onStudentsUpdate={handleStudentsUpdate} // Add this prop
-            />
-          </Box>
-        );
-      case "students":
-        return (
-          <Box>
-            <Typography variant="h5" gutterBottom>
-              רשימת סטודנטים
-            </Typography>
-            <Box
-              sx={{
-                width: "100%",
-              }}
-            >
-              <StudentTable
-                students={students}
-                onEdit={handleEditStudent}
-                onDelete={handleDeleteStudent}
-                tableProps={{
-                  sx: { tableLayout: "fixed" },
-                }}
-                columnWidths={{
-                  id: "10%",
-                  firstName: "10%",
-                  lastName: "15%",
-                  email: "25%",
-                  birthDate: "10%",  // Add width for birthDate column
-                  actions: "20%",
-                }}
-              />
-            </Box>
-          </Box>
-        );
-      case "addStudent":
-        return (
-          <Box>
-            <Typography variant="h5" gutterBottom>
-              {studentToEdit ? "עריכת סטודנט" : "הוספת סטודנט חדש"}
-            </Typography>
-            <StudentForm
-              onSave={handleSaveStudent}
-              studentToEdit={studentToEdit}
-              students={students}
-            />
-          </Box>
-        );
-      default:
-        return null;
-    }
+  // Get course by ID helper function
+  const getCourseById = (id) => {
+    return courses.find(course => course.id === id) || null;
+  };
+
+  // Get student by ID helper function
+  const getStudentById = (id) => {
+    return students.find(student => student.id === id) || null;
   };
 
   return (
@@ -464,8 +399,128 @@ const handleStudentsUpdate = (updatedStudents) => {
           <Sidebar onNavigate={handleNavigate} currentPage={currentPage} />
         </Box>
 
-        {/* Main content */}
-        <Box sx={{ flexGrow: 1 }}>{renderContent()}</Box>
+        {/* Main content - now uses Routes */}
+        <Box sx={{ flexGrow: 1 }}>
+          <Routes>
+            <Route path="/" element={<DashboardCards courses={courses} students={students} />} />
+            
+            {/* Course routes */}
+            <Route path="/courses" element={
+              <Box>
+                <Typography variant="h5" gutterBottom>רשימת קורסים</Typography>
+                <CourseTable 
+                  courses={courses}
+                  onEdit={handleEditCourse}
+                  onDelete={handleDeleteCourse}
+                  onManage={handleManageCourse}
+                  tableProps={{ sx: { tableLayout: "fixed" } }}
+                  columnWidths={{
+                    id: "10%",
+                    name: "30%",
+                    instructor: "20%",
+                    schedule: "10%",
+                    actions: "30%",
+                  }}
+                />
+              </Box>
+            } />
+
+            <Route path="/courses/new" element={
+              <Box>
+                <Typography variant="h5" gutterBottom>הוספת קורס חדש</Typography>
+                <CourseForm onSave={handleSaveCourse} courses={courses} />
+              </Box>
+            } />
+
+            <Route path="/courses/edit/:id" element={
+              <Box>
+                <Typography variant="h5" gutterBottom>עריכת קורס</Typography>
+                {location.pathname.includes('/edit/') && (
+                  <CourseForm 
+                    onSave={handleSaveCourse} 
+                    courseToEdit={getCourseById(location.pathname.split('/').pop())}
+                    courses={courses} 
+                  />
+                )}
+              </Box>
+            } />
+
+            {/* Update the route with a better loading handling */}
+            <Route path="/courses/manage/:id" element={
+              (() => {
+                const courseId = location.pathname.split('/').pop();
+                const course = getCourseById(courseId);
+                
+                // If courses have loaded but this course wasn't found, redirect
+                if (courses.length > 0 && !course) {
+                  return <Navigate to="/admin/courses" replace />;
+                }
+                
+                // If still loading courses or course was found, render appropriately
+                return course ? (
+                  <ManageCourse
+                    course={course}
+                    onBack={() => navigate("/admin/courses")}
+                    onCourseUpdate={handleCourseUpdate}
+                    onStudentsUpdate={handleStudentsUpdate}
+                  />
+                ) : (
+                  // Show loading state while courses are being fetched
+                  <Box sx={{ p: 3 }}>
+                    <Typography>טוען נתונים...</Typography>
+                  </Box>
+                );
+              })()
+            } />
+
+            {/* Student routes */}
+            <Route path="/students" element={
+              <Box>
+                <Typography variant="h5" gutterBottom>רשימת סטודנטים</Typography>
+                <StudentTable
+                  students={students}
+                  onEdit={handleEditStudent}
+                  onDelete={handleDeleteStudent}
+                  tableProps={{ sx: { tableLayout: "fixed" } }}
+                  columnWidths={{
+                    id: "10%",
+                    firstName: "10%", 
+                    lastName: "15%",
+                    email: "25%",
+                    birthDate: "10%",
+                    actions: "20%",
+                  }}
+                />
+              </Box>
+            } />
+
+            <Route path="/students/new" element={
+              <Box>
+                <Typography variant="h5" gutterBottom>הוספת סטודנט חדש</Typography>
+                <StudentForm 
+                  onSave={handleSaveStudent} 
+                  students={students}
+                />
+              </Box>
+            } />
+
+            <Route path="/students/edit/:id" element={
+              <Box>
+                <Typography variant="h5" gutterBottom>עריכת סטודנט</Typography>
+                {location.pathname.includes('/edit/') && (
+                  <StudentForm 
+                    onSave={handleSaveStudent}
+                    studentToEdit={getStudentById(location.pathname.split('/').pop())}
+                    students={students}
+                  />
+                )}
+              </Box>
+            } />
+
+            {/* Default route - redirect to dashboard */}
+            <Route path="*" element={<Navigate to="/admin" replace />} />
+          </Routes>
+        </Box>
       </Box>
 
       <Snackbar
@@ -476,7 +531,7 @@ const handleStudentsUpdate = (updatedStudents) => {
       >
         <Alert
           onClose={handleCloseAlert}
-          severity={successAlert.severity || "success"} // Use the severity from state
+          severity={successAlert.severity || "success"}
           sx={{ width: "100%" }}
         >
           {successAlert.message}
