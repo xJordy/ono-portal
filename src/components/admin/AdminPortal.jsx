@@ -477,6 +477,7 @@ export default function AdminPortal() {
                     onBack={() => navigate("/admin/courses")}
                     onCourseUpdate={handleCourseUpdate}
                     onStudentsUpdate={handleStudentsUpdate}
+                    students={students} // Make sure students are passed here
                   />
                 ) : (
                   // Show loading state while courses are being fetched

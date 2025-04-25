@@ -120,6 +120,13 @@ const ManageCourse = ({ course, onBack, onCourseUpdate, onStudentsUpdate, studen
   // Add this effect to load all students when the component mounts
   useEffect(() => {
     const loadStudents = () => {
+      // First try using students passed from props if available
+      if (students && students.length > 0) {
+        setAllStudents(students);
+        return;
+      }
+      
+      // Fallback to localStorage if no students in props
       const studentsData = getStudentsFromLocalStorage();
       // Create proper Student instances with methods
       const studentInstances = studentsData.map(student => 
@@ -136,7 +143,7 @@ const ManageCourse = ({ course, onBack, onCourseUpdate, onStudentsUpdate, studen
     };
 
     loadStudents();
-  }, []);
+  }, [students]); // Add students as a dependency
 
   // Update the getAvailableStudents function
   const getAvailableStudents = () => {
