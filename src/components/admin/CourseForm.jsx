@@ -6,6 +6,7 @@ import {
   Typography,
   Paper,
   MenuItem,
+  FormHelperText,
 } from "@mui/material";
 import { Course } from "../../models/Models";
 
@@ -18,8 +19,26 @@ const generateUniqueId = (existingIds) => {
 };
 
 const CourseForm = ({ onSave, courseToEdit, courses = [] }) => {
-  // Use a single formData object instead of individual state variables
+  // Form data state
   const [formData, setFormData] = useState({
+    name: "",
+    instructor: "",
+    day: "",
+    time: "",
+    descr: ""
+  });
+
+  // Track touched fields for validation
+  const [touched, setTouched] = useState({
+    name: false,
+    instructor: false,
+    day: false,
+    time: false,
+    descr: false
+  });
+
+  // Track form errors
+  const [errors, setErrors] = useState({
     name: "",
     instructor: "",
     day: "",
@@ -30,13 +49,27 @@ const CourseForm = ({ onSave, courseToEdit, courses = [] }) => {
   // Update form when editing a course
   useEffect(() => {
     if (courseToEdit) {
-      // Set all form fields at once
       setFormData({
         name: courseToEdit.name || "",
         instructor: courseToEdit.instructor || "",
         day: courseToEdit.day || "",
         time: courseToEdit.time || "",
         descr: courseToEdit.descr || ""
+      });
+      // Reset touched and errors when editing
+      setTouched({
+        name: false,
+        instructor: false,
+        day: false,
+        time: false,
+        descr: false
+      });
+      setErrors({
+        name: "",
+        instructor: "",
+        day: "",
+        time: "",
+        descr: ""
       });
     } else {
       // Reset form when not editing
@@ -50,6 +83,53 @@ const CourseForm = ({ onSave, courseToEdit, courses = [] }) => {
     }
   }, [courseToEdit]);
 
+  // Validate form data
+  const validateField = (name, value) => {
+    let error = "";
+    switch (name) {
+      case "name":
+        if (!value.trim()) {
+          error = "שם הקורס הוא שדה חובה";
+        } else if (value.trim().length < 3) {
+          error = "שם הקורס חייב להכיל לפחות 3 תווים";
+        }
+        break;
+      case "instructor":
+        if (!value.trim()) {
+          error = "שם המרצה הוא שדה חובה";
+        }
+        break;
+      case "day":
+        if (!value) {
+          error = "יש לבחור יום";
+        }
+        break;
+      case "time":
+        if (!value) {
+          error = "יש לבחור שעה";
+        }
+        break;
+      default:
+        break;
+    }
+    return error;
+  };
+
+  // Handle blur event for validation
+  const handleBlur = (e) => {
+    const { name } = e.target;
+    setTouched(prev => ({
+      ...prev,
+      [name]: true
+    }));
+    
+    const error = validateField(name, formData[name]);
+    setErrors(prev => ({
+      ...prev,
+      [name]: error
+    }));
+  };
+
   // Handle change for all form fields
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -57,10 +137,46 @@ const CourseForm = ({ onSave, courseToEdit, courses = [] }) => {
       ...prev,
       [name]: value
     }));
+    
+    // If field has been touched, validate on change
+    if (touched[name]) {
+      const error = validateField(name, value);
+      setErrors(prev => ({
+        ...prev,
+        [name]: error
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    let isValid = true;
+    
+    // Validate all fields
+    Object.keys(formData).forEach(name => {
+      const error = validateField(name, formData[name]);
+      newErrors[name] = error;
+      if (error) isValid = false;
+      
+      // Mark all fields as touched
+      setTouched(prev => ({
+        ...prev,
+        [name]: true
+      }));
+    });
+    
+    setErrors(newErrors);
+    return isValid;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Validate all fields before submission
+    if (!validateForm()) {
+      return;
+    }
+    
     const { name, instructor, day, time, descr } = formData;
 
     if (courseToEdit) {
@@ -75,6 +191,7 @@ const CourseForm = ({ onSave, courseToEdit, courses = [] }) => {
         assignments: courseToEdit.assignments,
         messages: courseToEdit.messages,
         students: courseToEdit.students,
+        studentIds: courseToEdit.studentIds,
       });
       onSave(updatedCourse);
     } else {
@@ -100,6 +217,20 @@ const CourseForm = ({ onSave, courseToEdit, courses = [] }) => {
         time: "",
         descr: ""
       });
+      setTouched({
+        name: false,
+        instructor: false,
+        day: false,
+        time: false,
+        descr: false
+      });
+      setErrors({
+        name: "",
+        instructor: "",
+        day: "",
+        time: "",
+        descr: ""
+      });
     }
   };
 
@@ -109,7 +240,7 @@ const CourseForm = ({ onSave, courseToEdit, courses = [] }) => {
         {courseToEdit ? "ערוך את פרטי הקורס" : "מלא את פרטי הקורס"}
       </Typography>
 
-      <Box component="form" onSubmit={handleSubmit}>
+      <Box component="form" onSubmit={handleSubmit} noValidate>
         <TextField
           fullWidth
           margin="normal"
@@ -117,6 +248,9 @@ const CourseForm = ({ onSave, courseToEdit, courses = [] }) => {
           name="name"
           value={formData.name}
           onChange={handleChange}
+          onBlur={handleBlur}
+          error={touched.name && Boolean(errors.name)}
+          helperText={touched.name && errors.name}
           required
         />
 
@@ -127,6 +261,9 @@ const CourseForm = ({ onSave, courseToEdit, courses = [] }) => {
           name="instructor"
           value={formData.instructor}
           onChange={handleChange}
+          onBlur={handleBlur}
+          error={touched.instructor && Boolean(errors.instructor)}
+          helperText={touched.instructor && errors.instructor}
           required
         />
 
@@ -140,6 +277,9 @@ const CourseForm = ({ onSave, courseToEdit, courses = [] }) => {
             name="day"
             value={formData.day}
             onChange={handleChange}
+            onBlur={handleBlur}
+            error={touched.day && Boolean(errors.day)}
+            helperText={touched.day && errors.day}
             required
           >
             <MenuItem value="יום א׳">ראשון</MenuItem>
@@ -165,6 +305,9 @@ const CourseForm = ({ onSave, courseToEdit, courses = [] }) => {
             name="time"
             value={formData.time}
             onChange={handleChange}
+            onBlur={handleBlur}
+            error={touched.time && Boolean(errors.time)}
+            helperText={touched.time && errors.time}
             required
           />
         </Box>
@@ -176,6 +319,9 @@ const CourseForm = ({ onSave, courseToEdit, courses = [] }) => {
           name="descr"
           value={formData.descr}
           onChange={handleChange}
+          onBlur={handleBlur}
+          error={touched.descr && Boolean(errors.descr)}
+          helperText={touched.descr && errors.descr}
           multiline
           rows={4}
           variant="outlined"

@@ -8,6 +8,18 @@ const AssignmentForm = ({ assignment, onSubmit, onCancel, isEditMode }) => {
     dueDate: "",
   });
 
+  const [touched, setTouched] = useState({
+    title: false,
+    description: false,
+    dueDate: false,
+  });
+
+  const [errors, setErrors] = useState({
+    title: "",
+    description: "",
+    dueDate: "",
+  });
+
   // Initialize form when editing an assignment
   useEffect(() => {
     if (assignment) {
@@ -15,6 +27,17 @@ const AssignmentForm = ({ assignment, onSubmit, onCancel, isEditMode }) => {
         title: assignment.title || "",
         description: assignment.description || "",
         dueDate: assignment.dueDate || "",
+      });
+      // Reset touched and errors when editing
+      setTouched({
+        title: false,
+        description: false,
+        dueDate: false,
+      });
+      setErrors({
+        title: "",
+        description: "",
+        dueDate: "",
       });
     } else {
       // Reset form when not editing
@@ -26,21 +49,104 @@ const AssignmentForm = ({ assignment, onSubmit, onCancel, isEditMode }) => {
     }
   }, [assignment]);
 
+  const validateField = (name, value) => {
+    let error = "";
+    const today = new Date().toISOString().split('T')[0];
+    
+    switch (name) {
+      case "title":
+        if (!value.trim()) {
+          error = "כותרת היא שדה חובה";
+        } else if (value.trim().length < 3) {
+          error = "כותרת חייבת להכיל לפחות 3 תווים";
+        }
+        break;
+      case "description":
+        if (!value.trim()) {
+          error = "תיאור הוא שדה חובה";
+        } else if (value.trim().length < 10) {
+          error = "תיאור חייב להכיל לפחות 10 תווים";
+        }
+        break;
+      case "dueDate":
+        if (!value) {
+          error = "תאריך הגשה הוא שדה חובה";
+        } else if (value < today) {
+          error = "תאריך ההגשה לא יכול להיות בעבר";
+        }
+        break;
+      default:
+        break;
+    }
+    return error;
+  };
+
+  // Handle blur event for validation
+  const handleBlur = (e) => {
+    const { name } = e.target;
+    setTouched(prev => ({
+      ...prev,
+      [name]: true
+    }));
+    
+    const error = validateField(name, formData[name]);
+    setErrors(prev => ({
+      ...prev,
+      [name]: error
+    }));
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
+    
+    // If field has been touched, validate on change
+    if (touched[name]) {
+      const error = validateField(name, value);
+      setErrors(prev => ({
+        ...prev,
+        [name]: error
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    let isValid = true;
+    
+    // Validate all fields
+    Object.keys(formData).forEach(name => {
+      const error = validateField(name, formData[name]);
+      newErrors[name] = error;
+      if (error) isValid = false;
+      
+      // Mark all fields as touched
+      setTouched(prev => ({
+        ...prev,
+        [name]: true
+      }));
+    });
+    
+    setErrors(newErrors);
+    return isValid;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Validate all fields before submission
+    if (!validateForm()) {
+      return;
+    }
+    
     onSubmit(formData);
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} noValidate>
       <DialogContent>
         <TextField
           autoFocus
@@ -50,6 +156,9 @@ const AssignmentForm = ({ assignment, onSubmit, onCancel, isEditMode }) => {
           name="title"
           value={formData.title}
           onChange={handleChange}
+          onBlur={handleBlur}
+          error={touched.title && Boolean(errors.title)}
+          helperText={touched.title && errors.title}
           required
         />
         <TextField
@@ -61,6 +170,9 @@ const AssignmentForm = ({ assignment, onSubmit, onCancel, isEditMode }) => {
           name="description"
           value={formData.description}
           onChange={handleChange}
+          onBlur={handleBlur}
+          error={touched.description && Boolean(errors.description)}
+          helperText={touched.description && errors.description}
           required
         />
         <TextField
@@ -79,7 +191,13 @@ const AssignmentForm = ({ assignment, onSubmit, onCancel, isEditMode }) => {
           }}
           value={formData.dueDate}
           onChange={handleChange}
+          onBlur={handleBlur}
+          error={touched.dueDate && Boolean(errors.dueDate)}
+          helperText={touched.dueDate && errors.dueDate}
           required
+          InputLabelProps={{
+            shrink: true,
+          }}
         />
       </DialogContent>
       <DialogActions>
