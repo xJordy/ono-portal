@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom";
-import { Box, Typography, Snackbar, Alert } from "@mui/material";
+import { Box, Typography, Snackbar, Alert, Button } from "@mui/material";
 import CourseForm from "./CourseForm";
 import CourseTable from "../common/shared/CourseTable";
 import ManageCourse from "./ManageCourse";
@@ -18,6 +18,7 @@ import {
   saveStudentsToLocalStorage,
   getStudentsFromLocalStorage,
 } from "../../utils/localStorage";
+import AddIcon from '@mui/icons-material/Add';
 
 export default function AdminPortal() {
   // State to store all courses
@@ -407,7 +408,20 @@ export default function AdminPortal() {
             {/* Course routes */}
             <Route path="/courses" element={
               <Box>
-                <Typography variant="h5" gutterBottom>רשימת קורסים</Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Typography variant="h5">רשימת קורסים</Typography>
+                  <Button 
+                    variant="contained" 
+                    color="primary"
+                    onClick={() => {
+                      setCourseToEdit(null);
+                      navigate("/admin/courses/new");
+                    }}
+                    startIcon={<AddIcon />}
+                  >
+                    הוסף קורס חדש
+                  </Button>
+                </Box>
                 <CourseTable 
                   courses={courses}
                   onEdit={handleEditCourse}
@@ -476,7 +490,20 @@ export default function AdminPortal() {
             {/* Student routes */}
             <Route path="/students" element={
               <Box>
-                <Typography variant="h5" gutterBottom>רשימת סטודנטים</Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Typography variant="h5">רשימת סטודנטים</Typography>
+                  <Button 
+                    variant="contained" 
+                    color="primary"
+                    onClick={() => {
+                      setStudentToEdit(null);
+                      navigate("/admin/students/new");
+                    }}
+                    startIcon={<AddIcon />}
+                  >
+                    הוסף סטודנט חדש
+                  </Button>
+                </Box>
                 <StudentTable
                   students={students}
                   onEdit={handleEditStudent}

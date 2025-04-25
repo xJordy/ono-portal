@@ -12,14 +12,12 @@ import {
 } from "@mui/material";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import DashboardIcon from "@mui/icons-material/Dashboard";
-import { Groups, PersonAddAlt1, PlaylistAdd } from "@mui/icons-material";
+import { Groups } from "@mui/icons-material";
 
 const defaultNavItems = [
   { id: "dashboard", label: "לוח בקרה", icon: <DashboardIcon /> },
   { id: "courses", label: "רשימת קורסים", icon: <ViewListIcon /> },
-  { id: "addCourse", label: "הוספת קורס", icon: <PlaylistAdd /> },
   { id: "students", label: "רשימת סטודנטים", icon: <Groups /> },
-  { id: "addStudent", label: "הוספת סטודנט", icon: <PersonAddAlt1 /> },
 ];
 
 const Sidebar = ({ 
