@@ -199,6 +199,7 @@ export default function AdminPortal() {
 
   // Function to start editing a course
   const handleEditCourse = (course) => {
+    // Make sure we're setting a complete course object with all fields
     setCourseToEdit(course);
     navigate(`/admin/courses/edit/${course.id}`);
   };
@@ -361,13 +362,8 @@ export default function AdminPortal() {
   };
 
   // Get course by ID helper function
-  const getCourseById = async (id) => {
-    try {
-      return await courseService.getById(id);
-    } catch (error) {
-      console.error(`Error fetching course ${id}:`, error);
-      return null;
-    }
+  const getCourseById = (id) => {
+    return courses.find(course => course.id === id) || null;
   };
 
   // Get student by ID helper function
