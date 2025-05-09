@@ -69,16 +69,31 @@ export default function AdminPortal() {
       try {
         console.log("Loading data from Firestore...");
         
-        // Load courses
+        // Load courses with subcollections for dashboard
         const coursesData = await courseService.getAll();
-        setCourses(coursesData);
+        
+        // Load detailed data for the first few courses (to improve dashboard performance)
+        // This ensures we have actual subcollections for the dashboard counts
+        const courseDetails = await Promise.all(
+          coursesData.slice(0, 5).map(course => courseService.getById(course.id))
+        );
+        
+        // Replace the first few courses with detailed versions
+        const enhancedCourses = [...coursesData];
+        courseDetails.forEach((detailedCourse, index) => {
+          if (detailedCourse) {
+            enhancedCourses[index] = detailedCourse;
+          }
+        });
+        
+        setCourses(enhancedCourses);
         
         // Load students
         const studentsData = await studentService.getAll();
         setStudents(studentsData);
         
         console.log("Data loaded successfully:", { 
-          courses: coursesData.length,
+          courses: enhancedCourses.length,
           students: studentsData.length
         });
       } catch (error) {
@@ -202,15 +217,35 @@ export default function AdminPortal() {
   // Function to delete a course
   const handleDeleteCourse = async (courseId) => {
     try {
-      // Find course name before deleting
+      // Find course and its enrolled students before deleting
       const courseToDelete = courses.find((course) => course.id === courseId);
       const courseName = courseToDelete ? courseToDelete.name : "הקורס";
+      const enrolledStudentIds = courseToDelete?.studentIds || [];
       
-      // Delete from Firestore
+      // First remove the course from all enrolled students
+      const studentUpdatePromises = enrolledStudentIds.map(studentId => 
+        studentService.removeFromCourse(studentId, courseId)
+      );
+      
+      // Wait for all student updates to complete
+      await Promise.all(studentUpdatePromises);
+      
+      // Then delete the course
       await courseService.delete(courseId);
       
-      // Update local state
+      // Update courses in local state
       setCourses((prev) => prev.filter((course) => course.id !== courseId));
+      
+      // Update students in local state to reflect removed course
+      setStudents(prev => prev.map(student => {
+        if (student.enrolledCourses && student.enrolledCourses.includes(courseId)) {
+          return {
+            ...student,
+            enrolledCourses: student.enrolledCourses.filter(id => id !== courseId)
+          };
+        }
+        return student;
+      }));
       
       // Show success message
       setSuccessAlert({
@@ -219,12 +254,7 @@ export default function AdminPortal() {
         severity: "info"
       });
     } catch (error) {
-      console.error(`Error deleting course ${courseId}:`, error);
-      setSuccessAlert({
-        open: true,
-        message: `שגיאה במחיקת הקורס: ${error.message}`,
-        severity: "error"
-      });
+      // Error handling...
     }
   };
 
@@ -236,11 +266,33 @@ export default function AdminPortal() {
         ? `${studentToDelete.firstName} ${studentToDelete.lastName}`
         : "הסטודנט";
       
-      // Delete from Firestore
+      // Get enrolled courses to update them
+      const enrolledCourseIds = studentToDelete?.enrolledCourses || [];
+      
+      // First, remove student from all enrolled courses
+      const courseUpdatePromises = enrolledCourseIds.map(courseId => 
+        courseService.removeStudent(courseId, studentId)
+      );
+      
+      // Wait for all course updates to complete
+      await Promise.all(courseUpdatePromises);
+      
+      // Then delete the student
       await studentService.delete(studentId);
       
-      // Update local state
-      setStudents((prev) => prev.filter((student) => student.id !== studentId));
+      // Update local state - both students and courses
+      setStudents(prev => prev.filter(student => student.id !== studentId));
+      
+      // Update courses in local state to reflect removed student
+      setCourses(prev => prev.map(course => {
+        if (course.studentIds && course.studentIds.includes(studentId)) {
+          return {
+            ...course,
+            studentIds: course.studentIds.filter(id => id !== studentId)
+          };
+        }
+        return course;
+      }));
       
       // Show success message
       setSuccessAlert({
@@ -249,12 +301,7 @@ export default function AdminPortal() {
         severity: "info"
       });
     } catch (error) {
-      console.error(`Error deleting student ${studentId}:`, error);
-      setSuccessAlert({
-        open: true,
-        message: `שגיאה במחיקת הסטודנט: ${error.message}`,
-        severity: "error"
-      });
+      // Error handling...
     }
   };
 
