@@ -4,6 +4,7 @@ import { Box, Typography, Snackbar, Alert, Button } from "@mui/material";
 import CourseForm from "./CourseForm";
 import CourseTable from "../common/shared/CourseTable";
 import ManageCourse from "./ManageCourse";
+import CourseManager from "./CourseManager"; // Add this import
 import Sidebar from "../common/shared/Sidebar";
 import { Assignment, Course, Student, Message } from "../../models/Models";
 import {
@@ -19,6 +20,8 @@ import {
   getStudentsFromLocalStorage,
 } from "../../utils/localStorage";
 import AddIcon from '@mui/icons-material/Add';
+// Add import for Firebase services
+import { courseService, studentService } from "../../firebase";
 
 export default function AdminPortal() {
   // State to store all courses
@@ -60,158 +63,115 @@ export default function AdminPortal() {
     return "dashboard";
   }
 
-  // Load courses from localStorage when component mounts
+  // Update the useEffect to load data from Firestore
   useEffect(() => {
-    const savedCourses = getCoursesFromLocalStorage();
-    console.log("Loading courses from localStorage:", savedCourses);
-
-    if (savedCourses && savedCourses.length > 0) {
-      const coursesInstances = savedCourses.map((course) => {
-        const newCourse = new Course({
-          id: course.id,
-          name: course.name,
-          instructor: course.instructor,
-          day: course.day,
-          time: course.time,
-          descr: course.descr,
-          assignments: [],
-          messages: [],
-          studentIds: [], // Initialize with empty studentIds array
+    const loadData = async () => {
+      try {
+        console.log("Loading data from Firestore...");
+        
+        // Load courses
+        const coursesData = await courseService.getAll();
+        setCourses(coursesData);
+        
+        // Load students
+        const studentsData = await studentService.getAll();
+        setStudents(studentsData);
+        
+        console.log("Data loaded successfully:", { 
+          courses: coursesData.length,
+          students: studentsData.length
         });
-
-        // Restore assignments if they exist
-        if (course.assignments && Array.isArray(course.assignments)) {
-          newCourse.assignments = course.assignments.map(
-            (a) => new Assignment(a.id, a.title, a.description, a.dueDate)
-          );
-        }
-
-        // Restore messages if they exist
-        if (course.messages && Array.isArray(course.messages)) {
-          newCourse.messages = course.messages.map(
-            (m) =>
-              new Message(
-                m.id,
-                m.title,
-                m.content,
-                m.sender,
-                m.timestamp ? new Date(m.timestamp) : null
-              )
-          );
-        }
-
-        // Handle both old and new formats for student data
-        if (course.studentIds && Array.isArray(course.studentIds)) {
-          // New format - just copy the student IDs
-          newCourse.studentIds = [...course.studentIds];
-        } else if (course.students && Array.isArray(course.students)) {
-          // Old format - extract IDs from student objects
-          newCourse.studentIds = course.students.map(s => s.id);
-        }
-
-        return newCourse;
-      });
-      setCourses(coursesInstances);
-    }
-
-    // Add student loading code
-    const savedStudents = getStudentsFromLocalStorage();
-    console.log("Loading students from localStorage:", savedStudents);
-
-    if (savedStudents && savedStudents.length > 0) {
-      const studentInstances = savedStudents.map((student) => {
-        return new Student({
-          id: student.id,
-          firstName: student.firstName,
-          lastName: student.lastName,
-          email: student.email,
-          birthDate: student.birthDate,
-          enrolledCourses: student.enrolledCourses || []
+      } catch (error) {
+        console.error("Error loading data from Firestore:", error);
+        setSuccessAlert({
+          open: true,
+          message: `שגיאה בטעינת נתונים: ${error.message}`,
+          severity: "error"
         });
-      });
-      setStudents(studentInstances);
-    }
+      }
+    };
+    
+    loadData();
   }, []);
 
-  // Save courses to localStorage when they change
-  useEffect(() => {
-    // Skip the first render completely
-    if (isFirstRenderRef.current) {
-      isFirstRenderRef.current = false;
-      return;
-    }
-
-    console.log("Saving courses:", courses);
-    saveCoursesToLocalStorage(courses);
-  }, [courses]);
-
-  // Save students to localStorage when they change
-  useEffect(() => {
-    // Skip the first render
-    if (isFirstRenderRef.current) {
-      return;
-    }
-
-    console.log("Saving students:", students);
-    saveStudentsToLocalStorage(students);
-  }, [students]);
-
   // Function to handle saving a new or edited course
-  const handleSaveCourse = (course) => {
-    if (courseToEdit) {
-      // Update existing course
-      setCourses((prev) => prev.map((c) => (c.id === course.id ? course : c)));
-      setCourseToEdit(null);
-
-      // Show success message for update
+  const handleSaveCourse = async (course) => {
+    try {
+      if (courseToEdit) {
+        // Update existing course
+        const updatedCourse = await courseService.update(course);
+        setCourses((prev) => prev.map((c) => (c.id === course.id ? updatedCourse : c)));
+        setCourseToEdit(null);
+        
+        // Show success message
+        setSuccessAlert({
+          open: true,
+          message: `הקורס "${course.name}" עודכן בהצלחה!`,
+          severity: "success",
+        });
+      } else {
+        // Add new course
+        const newCourse = await courseService.add(course);
+        setCourses((prev) => [...prev, newCourse]);
+        
+        // Show success message
+        setSuccessAlert({
+          open: true,
+          message: `הקורס "${course.name}" נוסף בהצלחה!`,
+          severity: "success",
+        });
+      }
+      
+      // Navigate to courses list
+      navigate("/admin/courses");
+    } catch (error) {
+      console.error("Error saving course:", error);
       setSuccessAlert({
         open: true,
-        message: `הקורס "${course.name}" עודכן בהצלחה!`,
-        severity: "success",
-      });
-    } else {
-      // Add new course
-      setCourses((prev) => [...prev, course]);
-
-      // Show success message for new course
-      setSuccessAlert({
-        open: true,
-        message: `הקורס "${course.name}" נוסף בהצלחה!`,
-        severity: "success",
+        message: `שגיאה בשמירת הקורס: ${error.message}`,
+        severity: "error"
       });
     }
-    // Navigate to courses list after saving
-    navigate("/admin/courses");
   };
 
   // Add these student management functions
-  const handleSaveStudent = (student) => {
-    if (studentToEdit) {
-      // Update existing student
-      setStudents((prev) =>
-        prev.map((s) => (s.id === student.id ? student : s))
-      );
-      setStudentToEdit(null);
-
-      // Show success message
+  const handleSaveStudent = async (student) => {
+    try {
+      if (studentToEdit) {
+        // Update existing student
+        const updatedStudent = await studentService.update(student);
+        setStudents((prev) => prev.map((s) => (s.id === student.id ? updatedStudent : s)));
+        setStudentToEdit(null);
+        
+        // Show success message
+        setSuccessAlert({
+          open: true,
+          message: `הסטודנט "${student.firstName} ${student.lastName}" עודכן בהצלחה!`,
+          severity: "success"
+        });
+      } else {
+        // Add new student
+        const newStudent = await studentService.add(student);
+        setStudents((prev) => [...prev, newStudent]);
+        
+        // Show success message
+        setSuccessAlert({
+          open: true,
+          message: `הסטודנט "${student.firstName} ${student.lastName}" נוסף בהצלחה!`,
+          severity: "success"
+        });
+      }
+      
+      // Navigate to students list
+      navigate("/admin/students");
+    } catch (error) {
+      console.error("Error saving student:", error);
       setSuccessAlert({
         open: true,
-        message: `הסטודנט "${student.firstName} ${student.lastName}" עודכן בהצלחה!`,
-        severity: "success",
-      });
-    } else {
-      // Add new student
-      setStudents((prev) => [...prev, student]);
-
-      // Show success message
-      setSuccessAlert({
-        open: true,
-        message: `הסטודנט "${student.firstName} ${student.lastName}" נוסף בהצלחה!`,
-        severity: "success",
+        message: `שגיאה בשמירת הסטודנט: ${error.message}`,
+        severity: "error"
       });
     }
-    // Navigate to students list after saving
-    navigate("/admin/students");
   };
 
   // Handle closing the success alert
@@ -240,40 +200,62 @@ export default function AdminPortal() {
   };
 
   // Function to delete a course
-  const handleDeleteCourse = (courseId) => {
-    // First, find the course to get its name before deletion
-    const courseToDelete = courses.find((course) => course.id === courseId);
-    const courseName = courseToDelete ? courseToDelete.name : "הקורס";
-
-    // Delete the course
-    setCourses((prev) => prev.filter((course) => course.id !== courseId));
-
-    // Show deletion success message with info severity
-    setSuccessAlert({
-      open: true,
-      message: `${courseName} נמחק בהצלחה!`,
-      severity: "info", // Blue alert for deletions
-    });
+  const handleDeleteCourse = async (courseId) => {
+    try {
+      // Find course name before deleting
+      const courseToDelete = courses.find((course) => course.id === courseId);
+      const courseName = courseToDelete ? courseToDelete.name : "הקורס";
+      
+      // Delete from Firestore
+      await courseService.delete(courseId);
+      
+      // Update local state
+      setCourses((prev) => prev.filter((course) => course.id !== courseId));
+      
+      // Show success message
+      setSuccessAlert({
+        open: true,
+        message: `${courseName} נמחק בהצלחה!`,
+        severity: "info"
+      });
+    } catch (error) {
+      console.error(`Error deleting course ${courseId}:`, error);
+      setSuccessAlert({
+        open: true,
+        message: `שגיאה במחיקת הקורס: ${error.message}`,
+        severity: "error"
+      });
+    }
   };
 
-  const handleDeleteStudent = (studentId) => {
-    // Find the student to get their name before deletion
-    const studentToDelete = students.find(
-      (student) => student.id === studentId
-    );
-    const studentName = studentToDelete
-      ? `${studentToDelete.firstName} ${studentToDelete.lastName}`
-      : "הסטודנט";
-
-    // Delete the student
-    setStudents((prev) => prev.filter((student) => student.id !== studentId));
-
-    // Show deletion success message
-    setSuccessAlert({
-      open: true,
-      message: `${studentName} נמחק בהצלחה!`,
-      severity: "info",
-    });
+  const handleDeleteStudent = async (studentId) => {
+    try {
+      // Find student before deleting
+      const studentToDelete = students.find((student) => student.id === studentId);
+      const studentName = studentToDelete
+        ? `${studentToDelete.firstName} ${studentToDelete.lastName}`
+        : "הסטודנט";
+      
+      // Delete from Firestore
+      await studentService.delete(studentId);
+      
+      // Update local state
+      setStudents((prev) => prev.filter((student) => student.id !== studentId));
+      
+      // Show success message
+      setSuccessAlert({
+        open: true,
+        message: `${studentName} נמחק בהצלחה!`,
+        severity: "info"
+      });
+    } catch (error) {
+      console.error(`Error deleting student ${studentId}:`, error);
+      setSuccessAlert({
+        open: true,
+        message: `שגיאה במחיקת הסטודנט: ${error.message}`,
+        severity: "error"
+      });
+    }
   };
 
   // Handle navigation changes - now uses React Router
@@ -332,8 +314,13 @@ export default function AdminPortal() {
   };
 
   // Get course by ID helper function
-  const getCourseById = (id) => {
-    return courses.find(course => course.id === id) || null;
+  const getCourseById = async (id) => {
+    try {
+      return await courseService.getById(id);
+    } catch (error) {
+      console.error(`Error fetching course ${id}:`, error);
+      return null;
+    }
   };
 
   // Get student by ID helper function
@@ -459,31 +446,19 @@ export default function AdminPortal() {
               </Box>
             } />
 
-            {/* Update the route with a better loading handling */}
+            {/* Replace the ManageCourse route with this */}
             <Route path="/courses/manage/:id" element={
               (() => {
                 const courseId = location.pathname.split('/').pop();
-                const course = getCourseById(courseId);
                 
-                // If courses have loaded but this course wasn't found, redirect
-                if (courses.length > 0 && !course) {
-                  return <Navigate to="/admin/courses" replace />;
-                }
-                
-                // If still loading courses or course was found, render appropriately
-                return course ? (
-                  <ManageCourse
-                    course={course}
+                return (
+                  <CourseManager
+                    courseId={courseId}
                     onBack={() => navigate("/admin/courses")}
                     onCourseUpdate={handleCourseUpdate}
                     onStudentsUpdate={handleStudentsUpdate}
-                    students={students} // Make sure students are passed here
+                    students={students}
                   />
-                ) : (
-                  // Show loading state while courses are being fetched
-                  <Box sx={{ p: 3 }}>
-                    <Typography>טוען נתונים...</Typography>
-                  </Box>
                 );
               })()
             } />

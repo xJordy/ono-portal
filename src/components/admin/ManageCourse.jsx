@@ -29,6 +29,7 @@ import {
   saveCourseToLocalStorage,
   getStudentsFromLocalStorage,
 } from "../../utils/localStorage";
+import { courseService, studentService } from "../../firebase"; // Add this import
 import AssignmentForm from "./AssignmentForm";
 import MessageForm from "./MessageForm";
 import ConfirmationDialog from "../common/ConfirmationDialog";
@@ -247,24 +248,52 @@ const ManageCourse = ({ course, onBack, onCourseUpdate, onStudentsUpdate, studen
     setAssignmentToDelete(assignmentId);
   };
 
-  const handleConfirmDeleteAssignment = () => {
-    // Get the assignment title before deletion for the message
-    const assignmentTitle =
-      currentCourse.assignments.find((a) => a.id === assignmentToDelete)
-        ?.title || "המטלה";
-
-    const updatedCourse = currentCourse.removeAssignment(assignmentToDelete);
-    setCurrentCourse(updatedCourse);
-    if (onCourseUpdate) onCourseUpdate(updatedCourse);
-
-    // Show info message for deletion instead of success
-    setSuccessAlert({
-      open: true,
-      message: `${assignmentTitle} נמחקה בהצלחה!`,
-      severity: "info", // Change to blue
-    });
-
-    setAssignmentToDelete(null);
+  const handleConfirmDeleteAssignment = async () => {
+    try {
+      // Find assignment to get title for success message
+      const assignment = currentCourse.assignments.find(a => a.id === assignmentToDelete);
+      const assignmentTitle = assignment ? assignment.title : "המטלה";
+      
+      // Delete from Firestore
+      await courseService.deleteAssignment(currentCourse.id, assignmentToDelete);
+      
+      // Update local state
+      const updatedAssignments = currentCourse.assignments.filter(
+        a => a.id !== assignmentToDelete
+      );
+      
+      setCurrentCourse(prev => ({
+        ...prev,
+        assignments: updatedAssignments
+      }));
+      
+      // Notify parent if needed
+      if (onCourseUpdate) {
+        onCourseUpdate({
+          ...currentCourse,
+          assignments: updatedAssignments
+        });
+      }
+      
+      // Show success message
+      setSuccessAlert({
+        open: true,
+        message: `${assignmentTitle} נמחקה בהצלחה!`,
+        severity: "info"
+      });
+      
+      // Reset state
+      setAssignmentToDelete(null);
+      
+    } catch (error) {
+      console.error(`Error deleting assignment ${assignmentToDelete}:`, error);
+      setSuccessAlert({
+        open: true,
+        message: `שגיאה במחיקת המטלה: ${error.message}`,
+        severity: "error"
+      });
+      setAssignmentToDelete(null);
+    }
   };
 
   // Add handler to close alert
@@ -276,192 +305,322 @@ const ManageCourse = ({ course, onBack, onCourseUpdate, onStudentsUpdate, studen
   };
 
   // Update the assignment submission handler
-  const handleSubmitAssignment = (formData) => {
+const handleSubmitAssignment = async (formData) => {
+  try {
     if (assignmentToEdit) {
-      // Update assignment with form data
-      const updatedCourse = currentCourse.updateAssignment(assignmentToEdit, {
-        title: formData.title,
-        description: formData.description,
-        dueDate: formData.dueDate,
-      });
-      setCurrentCourse(updatedCourse);
-      if (onCourseUpdate) onCourseUpdate(updatedCourse);
-
+      // Update existing assignment in Firestore
+      const updatedAssignment = await courseService.updateAssignment(
+        currentCourse.id, 
+        {
+          id: assignmentToEdit,
+          title: formData.title,
+          description: formData.description,
+          dueDate: formData.dueDate
+        }
+      );
+      
+      // Update local state
+      const updatedAssignments = currentCourse.assignments.map(a => 
+        a.id === assignmentToEdit ? updatedAssignment : a
+      );
+      
+      setCurrentCourse(prev => ({
+        ...prev,
+        assignments: updatedAssignments
+      }));
+      
+      // Notify parent if needed
+      if (onCourseUpdate) {
+        onCourseUpdate({
+          ...currentCourse,
+          assignments: updatedAssignments
+        });
+      }
+      
       // Show success message
       setSuccessAlert({
         open: true,
         message: `המטלה "${formData.title}" עודכנה בהצלחה!`,
+        severity: "success"
       });
     } else {
-      // Add new assignment with 4-digit ID
-      const existingIds = currentCourse.assignments?.map((a) => a.id) || [];
-      const assignment = new Assignment(
-        generateUniqueId(existingIds),
+      // Create new assignment object
+      const newAssignment = new Assignment(
+        null, // ID will be assigned by Firestore
         formData.title,
         formData.description,
         formData.dueDate
       );
-      const updatedCourse = currentCourse.addAssignment(assignment);
-      setCurrentCourse(updatedCourse);
-      if (onCourseUpdate) onCourseUpdate(updatedCourse);
-
+      
+      // Add to Firestore
+      const savedAssignment = await courseService.addAssignment(
+        currentCourse.id,
+        newAssignment
+      );
+      
+      // Update local state with the new assignment that includes an ID
+      const updatedAssignments = [...currentCourse.assignments, savedAssignment];
+      setCurrentCourse(prev => ({
+        ...prev,
+        assignments: updatedAssignments
+      }));
+      
+      // Notify parent if needed
+      if (onCourseUpdate) {
+        onCourseUpdate({
+          ...currentCourse,
+          assignments: updatedAssignments
+        });
+      }
+      
       // Show success message
       setSuccessAlert({
         open: true,
         message: `המטלה "${formData.title}" נוספה בהצלחה!`,
+        severity: "success"
       });
     }
-    // Reset state and close dialog
-    setNewAssignment({ title: "", description: "", dueDate: "" });
-    setAssignmentToEdit(null);
+    
+    // Close dialog and reset state
     setOpenAssignmentDialog(false);
-  };
+    setAssignmentToEdit(null);
+    
+  } catch (error) {
+    console.error("Error saving assignment:", error);
+    setSuccessAlert({
+      open: true,
+      message: `שגיאה בשמירת המטלה: ${error.message}`,
+      severity: "error"
+    });
+  }
+};
 
-  // Message handlers
-  const handleAddMessage = (formData) => {
-    const existingIds = currentCourse.messages.map((m) => m.id);
-    const message = new Message(
-      generateUniqueId(existingIds),
+  // Update the message handler
+const handleAddMessage = async (formData) => {
+  try {
+    // Create new message object
+    const newMessage = new Message(
+      null, // ID will be assigned by Firestore
       formData.title,
       formData.content,
-      formData.sender,
-      new Date()
+      formData.sender
     );
-
-    const updatedCourse = currentCourse.addMessage(message);
-    setCurrentCourse(updatedCourse);
-
-    if (onCourseUpdate) onCourseUpdate(updatedCourse);
-
+    
+    // Add to Firestore
+    const savedMessage = await courseService.addMessage(
+      currentCourse.id,
+      newMessage
+    );
+    
+    // Update local state with the new message that includes an ID
+    const updatedMessages = [...currentCourse.messages, savedMessage];
+    setCurrentCourse(prev => ({
+      ...prev,
+      messages: updatedMessages
+    }));
+    
+    // Notify parent if needed
+    if (onCourseUpdate) {
+      onCourseUpdate({
+        ...currentCourse,
+        messages: updatedMessages
+      });
+    }
+    
     // Show success message
     setSuccessAlert({
       open: true,
       message: `ההודעה "${formData.title}" נוספה בהצלחה!`,
+      severity: "success"
     });
-
+    
+    // Close dialog
     setOpenMessageDialog(false);
-  };
+    
+  } catch (error) {
+    console.error("Error adding message:", error);
+    setSuccessAlert({
+      open: true,
+      message: `שגיאה בשמירת ההודעה: ${error.message}`,
+      severity: "error"
+    });
+  }
+};
 
   const handleDeleteMessage = (messageId) => {
     setMessageToDelete(messageId);
   };
 
-  const handleConfirmDeleteMessage = () => {
-    // Get the message title before deletion for the message
-    const messageTitle =
-      currentCourse.messages.find((m) => m.id === messageToDelete)?.title ||
-      "ההודעה";
-
-    const updatedCourse = currentCourse.removeMessage(messageToDelete);
-    setCurrentCourse(updatedCourse);
-    if (onCourseUpdate) onCourseUpdate(updatedCourse);
-
-    setSuccessAlert({
-      open: true,
-      message: `${messageTitle} נמחקה בהצלחה!`,
-      severity: "info", // Change to blue
-    });
-
-    setMessageToDelete(null);
+  const handleConfirmDeleteMessage = async () => {
+    try {
+      // Find message to get title for success message
+      const message = currentCourse.messages.find(m => m.id === messageToDelete);
+      const messageTitle = message ? message.title : "ההודעה";
+      
+      // Delete from Firestore
+      await courseService.deleteMessage(currentCourse.id, messageToDelete);
+      
+      // Update local state
+      const updatedMessages = currentCourse.messages.filter(
+        m => m.id !== messageToDelete
+      );
+      
+      setCurrentCourse(prev => ({
+        ...prev,
+        messages: updatedMessages
+      }));
+      
+      // Notify parent if needed
+      if (onCourseUpdate) {
+        onCourseUpdate({
+          ...currentCourse,
+          messages: updatedMessages
+        });
+      }
+      
+      // Show success message
+      setSuccessAlert({
+        open: true,
+        message: `${messageTitle} נמחקה בהצלחה!`,
+        severity: "info"
+      });
+      
+      // Reset state
+      setMessageToDelete(null);
+      
+    } catch (error) {
+      console.error(`Error deleting message ${messageToDelete}:`, error);
+      setSuccessAlert({
+        open: true,
+        message: `שגיאה במחיקת ההודעה: ${error.message}`,
+        severity: "error"
+      });
+      setMessageToDelete(null);
+    }
   };
 
   // Student handlers
-  const handleAddStudents = () => {
+  const handleAddStudents = async () => {
     if (selectedStudents.length === 0) return;
-
-    // Find the selected student objects
-    const studentsToAdd = allStudents.filter((student) =>
-      selectedStudents.includes(student.id)
-    );
-
-    // Track updated students for syncing back to the main state
-    const updatedStudents = [];
-
-    setCurrentCourse((prev) => {
-      // Create a proper Course instance with all methods
-      const updated = new Course({
-        id: prev.id,
-        name: prev.name,
-        instructor: prev.instructor,
-        day: prev.day,
-        time: prev.time,
-        descr: prev.descr,
-        assignments: [...prev.assignments],
-        messages: [...prev.messages],
-        studentIds: [...(prev.studentIds || [])],
-      });
+    
+    try {
+      // Create array for batch processing
+      const enrollmentPromises = [];
       
-      // Now use the proper enrollStudent method!
-      studentsToAdd.forEach((student) => {
-        // Create a proper Student instance with ALL properties
-        const studentInstance = new Student({
-          id: student.id,
-          firstName: student.firstName,
-          lastName: student.lastName,
-          email: student.email,
-          birthDate: student.birthDate,
-          enrolledCourses: [...(student.enrolledCourses || [])]
+      // Find the selected student objects
+      const studentsToAdd = allStudents.filter((student) =>
+        selectedStudents.includes(student.id)
+      );
+      
+      // Process each student enrollment
+      for (const student of studentsToAdd) {
+        // Add to both course and student records in Firestore
+        enrollmentPromises.push(
+          courseService.enrollStudent(currentCourse.id, student.id)
+            .then(() => studentService.enrollInCourse(student.id, currentCourse.id))
+        );
+      }
+      
+      // Wait for all enrollments to complete
+      await Promise.all(enrollmentPromises);
+      
+      // Update local state with the new student IDs
+      const updatedStudentIds = [
+        ...currentCourse.studentIds,
+        ...selectedStudents.filter(id => !currentCourse.studentIds.includes(id))
+      ];
+      
+      // Update local state
+      setCurrentCourse(prev => ({
+        ...prev,
+        studentIds: updatedStudentIds
+      }));
+      
+      // Notify parent component
+      if (onCourseUpdate) {
+        onCourseUpdate({
+          ...currentCourse,
+          studentIds: updatedStudentIds
         });
-        
-        // Enroll student - this adds the course ID to student's enrolledCourses
-        updated.enrollStudent(studentInstance);
-        
-        // Add to updated students list to sync to global state
-        updatedStudents.push(studentInstance);
+      }
+      
+      // Show success message
+      setSuccessAlert({
+        open: true,
+        message: selectedStudents.length === 1
+          ? "סטודנט אחד נוסף לקורס בהצלחה!"
+          : `${selectedStudents.length} סטודנטים נוספו לקורס בהצלחה!`,
+        severity: "success",
       });
       
-      return updated;
-    });
-
-    // Update global students state 
-    if (updatedStudents.length > 0 && onStudentsUpdate) {
-      onStudentsUpdate(updatedStudents);
+      // Reset state
+      setOpenStudentDialog(false);
+      setSelectedStudents([]);
+      setSearchQuery("");
+      
+    } catch (error) {
+      console.error("Error enrolling students:", error);
+      setSuccessAlert({
+        open: true,
+        message: "שגיאה ברישום הסטודנטים לקורס",
+        severity: "error"
+      });
     }
-
-    // Rest of your code remains the same
-    shouldUpdateParent.current = true;
-    setSuccessAlert({
-      open: true,
-      message: selectedStudents.length === 1
-        ? "סטודנט אחד נוסף לקורס בהצלחה!"
-        : `${selectedStudents.length} סטודנטים נוספו לקורס בהצלחה!`,
-      severity: "success",
-    });
-    setOpenStudentDialog(false);
-    setSelectedStudents([]);
-    setSearchQuery("");
   };
 
   const handleDeleteStudent = (studentId) => {
     setStudentToDelete(studentId);
   };
 
-  const handleConfirmDeleteStudent = () => {
-    // Get student name before deletion for the message
-    const student = courseStudents.find(s => s.id === studentToDelete);
-    const studentName = student
-      ? `${student.firstName} ${student.lastName}`
-      : "הסטודנט/ית";
-
-    setCurrentCourse((prev) => {
-      const updated = new Course({
+  const handleConfirmDeleteStudent = async () => {
+    try {
+      // Get student details for success message
+      const student = allStudents.find(s => s.id === studentToDelete);
+      const studentName = student 
+        ? `${student.firstName} ${student.lastName}` 
+        : "הסטודנט";
+      
+      // Remove from Firestore
+      await courseService.removeStudent(currentCourse.id, studentToDelete);
+      await studentService.removeFromCourse(studentToDelete, currentCourse.id);
+      
+      // Update local state
+      const updatedStudentIds = currentCourse.studentIds.filter(
+        id => id !== studentToDelete
+      );
+      
+      setCurrentCourse(prev => ({
         ...prev,
-        studentIds: prev.studentIds ? prev.studentIds.filter(id => id !== studentToDelete) : []
+        studentIds: updatedStudentIds
+      }));
+      
+      // Notify parent components if needed
+      if (onCourseUpdate) {
+        onCourseUpdate({
+          ...currentCourse,
+          studentIds: updatedStudentIds
+        });
+      }
+      
+      // Show success message
+      setSuccessAlert({
+        open: true,
+        message: `${studentName} הוסר מהקורס בהצלחה!`,
+        severity: "info"
       });
-      return updated;
-    });
-
-    // Flag that we need to update the parent
-    shouldUpdateParent.current = true;
-
-    // Show info message for deletion instead of success
-    setSuccessAlert({
-      open: true,
-      message: `${studentName} הוסר/ה מהקורס בהצלחה!`,
-      severity: "info",
-    });
-
-    setStudentToDelete(null);
+      
+      // Reset state
+      setStudentToDelete(null);
+      
+    } catch (error) {
+      console.error(`Error removing student ${studentToDelete}:`, error);
+      setSuccessAlert({
+        open: true,
+        message: `שגיאה בהסרת הסטודנט: ${error.message}`,
+        severity: "error"
+      });
+      setStudentToDelete(null);
+    }
   };
 
   // Get the actual student objects for this course

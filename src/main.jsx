@@ -4,10 +4,14 @@ import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.jsx'
 import { RTL } from './theme/rtlSetup'
-import { initializeAppData } from './utils/initializeData'
+import { initializeFirestore } from './firebase'
 
-// Initialize mock data if localStorage is empty
-initializeAppData();
+// Initialize Firestore instead of local storage
+initializeFirestore().then(() => {
+  console.log('Firebase initialized successfully');
+}).catch(err => {
+  console.error('Error initializing Firebase:', err);
+});
 
 createRoot(document.getElementById('root')).render(
   // <StrictMode>
@@ -16,5 +20,5 @@ createRoot(document.getElementById('root')).render(
         <App />
       </BrowserRouter>
     </RTL>
-  // </StrictMode>,
+  // </StrictMode>
 )
