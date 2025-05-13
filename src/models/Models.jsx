@@ -21,7 +21,14 @@ export class Message {
 
 // Simple Student model
 export class Student {
-  constructor({ id, firstName, lastName, email, birthDate, enrolledCourses = [] }) {
+  constructor({
+    id,
+    firstName,
+    lastName,
+    email,
+    birthDate,
+    enrolledCourses = [],
+  }) {
     this.id = id;
     this.firstName = firstName;
     this.lastName = lastName;
@@ -113,9 +120,9 @@ export class Course {
 
   // Add a method to get actual student objects when needed
   getStudents(allStudents) {
-    return this.studentIds.map(id => 
-      allStudents.find(student => student.id === id)
-    ).filter(Boolean); // Remove any undefined values
+    return this.studentIds
+      .map((id) => allStudents.find((student) => student.id === id))
+      .filter(Boolean); // Remove any undefined values
   }
 
   // Update enrollment method to store IDs only
@@ -128,7 +135,7 @@ export class Course {
   }
 
   removeStudent(studentId) {
-    this.studentIds = this.studentIds.filter(id => id !== studentId);
+    this.studentIds = this.studentIds.filter((id) => id !== studentId);
     return this;
   }
 

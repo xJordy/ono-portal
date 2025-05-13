@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { TextField, DialogContent, DialogActions, Button } from "@mui/material";
 
 const AssignmentForm = ({ assignment, onSubmit, onCancel, isEditMode }) => {
@@ -51,8 +51,8 @@ const AssignmentForm = ({ assignment, onSubmit, onCancel, isEditMode }) => {
 
   const validateField = (name, value) => {
     let error = "";
-    const today = new Date().toISOString().split('T')[0];
-    
+    const today = new Date().toISOString().split("T")[0];
+
     switch (name) {
       case "title":
         if (!value.trim()) {
@@ -84,15 +84,15 @@ const AssignmentForm = ({ assignment, onSubmit, onCancel, isEditMode }) => {
   // Handle blur event for validation
   const handleBlur = (e) => {
     const { name } = e.target;
-    setTouched(prev => ({
+    setTouched((prev) => ({
       ...prev,
-      [name]: true
+      [name]: true,
     }));
-    
+
     const error = validateField(name, formData[name]);
-    setErrors(prev => ({
+    setErrors((prev) => ({
       ...prev,
-      [name]: error
+      [name]: error,
     }));
   };
 
@@ -102,13 +102,13 @@ const AssignmentForm = ({ assignment, onSubmit, onCancel, isEditMode }) => {
       ...prev,
       [name]: value,
     }));
-    
+
     // If field has been touched, validate on change
     if (touched[name]) {
       const error = validateField(name, value);
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: error
+        [name]: error,
       }));
     }
   };
@@ -116,32 +116,32 @@ const AssignmentForm = ({ assignment, onSubmit, onCancel, isEditMode }) => {
   const validateForm = () => {
     const newErrors = {};
     let isValid = true;
-    
+
     // Validate all fields
-    Object.keys(formData).forEach(name => {
+    Object.keys(formData).forEach((name) => {
       const error = validateField(name, formData[name]);
       newErrors[name] = error;
       if (error) isValid = false;
-      
+
       // Mark all fields as touched
-      setTouched(prev => ({
+      setTouched((prev) => ({
         ...prev,
-        [name]: true
+        [name]: true,
       }));
     });
-    
+
     setErrors(newErrors);
     return isValid;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     // Validate all fields before submission
     if (!validateForm()) {
       return;
     }
-    
+
     onSubmit(formData);
   };
 

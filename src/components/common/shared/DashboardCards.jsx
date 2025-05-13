@@ -1,4 +1,3 @@
-import React from "react";
 import { Box, Typography, Card, CardContent } from "@mui/material";
 
 const DashboardCards = ({ courses, students, userRole = "admin" }) => {
@@ -64,10 +63,9 @@ const DashboardCards = ({ courses, students, userRole = "admin" }) => {
         לוח בקרה
       </Typography>
       <Typography gutterBottom>
-        {userRole === "admin" 
+        {userRole === "admin"
           ? "ברוך הבא למערכת ניהול הקורסים. השתמש בתפריט כדי לנווט."
-          : "ברוך הבא לפורטל הסטודנט. כאן תוכל לצפות בקורסים, מטלות והודעות."
-        }
+          : "ברוך הבא לפורטל הסטודנט. כאן תוכל לצפות בקורסים, מטלות והודעות."}
       </Typography>
 
       <Box sx={{ mt: 3, display: "flex", flexWrap: "wrap", gap: 3 }}>

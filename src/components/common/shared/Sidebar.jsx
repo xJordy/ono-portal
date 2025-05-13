@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Box,
   List,
@@ -20,11 +19,11 @@ const defaultNavItems = [
   { id: "students", label: "רשימת סטודנטים", icon: <Groups /> },
 ];
 
-const Sidebar = ({ 
-  onNavigate, 
-  currentPage, 
-  navItems = defaultNavItems, 
-  title = "ניהול המערכת" 
+const Sidebar = ({
+  onNavigate,
+  currentPage,
+  navItems = defaultNavItems,
+  title = "ניהול המערכת",
 }) => {
   return (
     <Paper sx={{ width: 200, height: "100%" }}>

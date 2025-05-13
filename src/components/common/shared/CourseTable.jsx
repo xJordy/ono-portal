@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Table,
   TableBody,
@@ -9,7 +9,7 @@ import {
   Paper,
   Button,
 } from "@mui/material";
-import ConfirmationDialog from "../ConfirmationDialog"
+import ConfirmationDialog from "../ConfirmationDialog";
 
 const CourseTable = ({
   courses,
@@ -19,7 +19,12 @@ const CourseTable = ({
   tableProps,
   columnWidths = {},
   actionButtons = { edit: true, delete: true, manage: true, view: false },
-  buttonLabels = { manage: "ניהול", view: "צפה", edit: "ערוך", delete: "מחיקה" }
+  buttonLabels = {
+    manage: "ניהול",
+    view: "צפה",
+    edit: "ערוך",
+    delete: "מחיקה",
+  },
 }) => {
   const [courseToDelete, setCourseToDelete] = useState(null);
 
@@ -32,7 +37,7 @@ const CourseTable = ({
     onDelete(courseToDelete);
     setCourseToDelete(null);
   };
-  
+
   const handleRowClick = (course) => {
     if (onEdit && actionButtons.edit) {
       onEdit(course);
@@ -70,7 +75,8 @@ const CourseTable = ({
                   key={course.id}
                   onClick={() => handleRowClick(course)}
                   sx={{
-                    cursor: onEdit && actionButtons.edit ? "pointer" : "default",
+                    cursor:
+                      onEdit && actionButtons.edit ? "pointer" : "default",
                     transition: "background-color 0.3s",
                     "&:hover": {
                       backgroundColor: "rgba(0, 0, 0, 0.04)",
@@ -103,7 +109,7 @@ const CourseTable = ({
                         {buttonLabels.manage}
                       </Button>
                     )}
-                    
+
                     {actionButtons.view && onManage && (
                       <Button
                         variant="outlined"
@@ -117,7 +123,7 @@ const CourseTable = ({
                         {buttonLabels.view}
                       </Button>
                     )}
-                    
+
                     {actionButtons.delete && onDelete && (
                       <Button
                         variant="outlined"

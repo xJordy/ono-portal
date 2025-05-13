@@ -1,28 +1,27 @@
-import React from "react";
-import { 
-  Paper, 
-  TableContainer, 
-  Table, 
-  TableHead, 
-  TableRow, 
-  TableCell, 
-  TableBody, 
-  Typography 
+import {
+  Paper,
+  TableContainer,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  Typography,
 } from "@mui/material";
 
 const StudentAssignmentsTable = ({ courses }) => {
   // Extract all assignments from all courses
-  const assignments = courses.flatMap(course => 
-    (course.assignments || []).map(assignment => ({
+  const assignments = courses.flatMap((course) =>
+    (course.assignments || []).map((assignment) => ({
       ...assignment,
       courseName: course.name,
-      courseId: course.id
+      courseId: course.id,
     }))
   );
 
   // Sort assignments by due date (upcoming first)
-  const sortedAssignments = [...assignments].sort((a, b) => 
-    new Date(a.dueDate) - new Date(b.dueDate)
+  const sortedAssignments = [...assignments].sort(
+    (a, b) => new Date(a.dueDate) - new Date(b.dueDate)
   );
 
   return (
@@ -50,12 +49,14 @@ const StudentAssignmentsTable = ({ courses }) => {
                   <TableCell>{assignment.courseName}</TableCell>
                   <TableCell>{assignment.title}</TableCell>
                   <TableCell>{assignment.dueDate}</TableCell>
-                  <TableCell sx={{ 
-                    maxWidth: '300px',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap'
-                  }}>
+                  <TableCell
+                    sx={{
+                      maxWidth: "300px",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
                     {assignment.description}
                   </TableCell>
                 </TableRow>
@@ -64,7 +65,10 @@ const StudentAssignmentsTable = ({ courses }) => {
           </TableBody>
         </Table>
       </TableContainer>
-      <Typography variant="caption" sx={{ mt: 1, display: 'block', textAlign: 'center' }}>
+      <Typography
+        variant="caption"
+        sx={{ mt: 1, display: "block", textAlign: "center" }}
+      >
         המטלות מסודרות לפי תאריך הגשה (הקרובות ביותר בראש הטבלה)
       </Typography>
     </>

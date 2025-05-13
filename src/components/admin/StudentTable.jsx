@@ -8,16 +8,16 @@ import {
   TableHead,
   TableRow,
 } from "@mui/material";
-import React, { useState } from "react";
+import { useState } from "react";
 import ConfirmationDialog from "../common/ConfirmationDialog";
 
 // Add this helper function to format date
 const formatDate = (dateValue) => {
   if (!dateValue) return "-";
-  
+
   // Handle both Date objects and dayjs objects
   const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
-  
+
   return new Intl.DateTimeFormat("he-IL", {
     day: "2-digit",
     month: "2-digit",
@@ -33,7 +33,7 @@ export default function StudentTable({
   tableProps,
   columnWidths = {},
   actionButtons = { edit: true, delete: true },
-  skipConfirmation = false // Add this prop
+  skipConfirmation = false, // Add this prop
 }) {
   const [studentToDelete, setStudentToDelete] = useState(null);
 

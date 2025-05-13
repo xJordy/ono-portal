@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -6,7 +6,6 @@ import {
   Typography,
   Paper,
   MenuItem,
-  FormHelperText,
 } from "@mui/material";
 import { Course } from "../../models/Models";
 
@@ -25,7 +24,7 @@ const CourseForm = ({ onSave, courseToEdit, courses = [] }) => {
     instructor: "",
     day: "",
     time: "",
-    descr: ""
+    descr: "",
   });
 
   // Track touched fields for validation
@@ -34,7 +33,7 @@ const CourseForm = ({ onSave, courseToEdit, courses = [] }) => {
     instructor: false,
     day: false,
     time: false,
-    descr: false
+    descr: false,
   });
 
   // Track form errors
@@ -43,7 +42,7 @@ const CourseForm = ({ onSave, courseToEdit, courses = [] }) => {
     instructor: "",
     day: "",
     time: "",
-    descr: ""
+    descr: "",
   });
 
   // Update form when editing a course
@@ -54,7 +53,7 @@ const CourseForm = ({ onSave, courseToEdit, courses = [] }) => {
         instructor: courseToEdit.instructor || "",
         day: courseToEdit.day || "",
         time: courseToEdit.time || "",
-        descr: courseToEdit.descr || ""
+        descr: courseToEdit.descr || "",
       });
       // Reset touched and errors when editing
       setTouched({
@@ -62,14 +61,14 @@ const CourseForm = ({ onSave, courseToEdit, courses = [] }) => {
         instructor: false,
         day: false,
         time: false,
-        descr: false
+        descr: false,
       });
       setErrors({
         name: "",
         instructor: "",
         day: "",
         time: "",
-        descr: ""
+        descr: "",
       });
     } else {
       // Reset form when not editing
@@ -78,7 +77,7 @@ const CourseForm = ({ onSave, courseToEdit, courses = [] }) => {
         instructor: "",
         day: "",
         time: "",
-        descr: ""
+        descr: "",
       });
     }
   }, [courseToEdit]);
@@ -118,32 +117,32 @@ const CourseForm = ({ onSave, courseToEdit, courses = [] }) => {
   // Handle blur event for validation
   const handleBlur = (e) => {
     const { name } = e.target;
-    setTouched(prev => ({
+    setTouched((prev) => ({
       ...prev,
-      [name]: true
+      [name]: true,
     }));
-    
+
     const error = validateField(name, formData[name]);
-    setErrors(prev => ({
+    setErrors((prev) => ({
       ...prev,
-      [name]: error
+      [name]: error,
     }));
   };
 
   // Handle change for all form fields
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
-    
+
     // If field has been touched, validate on change
     if (touched[name]) {
       const error = validateField(name, value);
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: error
+        [name]: error,
       }));
     }
   };
@@ -151,32 +150,32 @@ const CourseForm = ({ onSave, courseToEdit, courses = [] }) => {
   const validateForm = () => {
     const newErrors = {};
     let isValid = true;
-    
+
     // Validate all fields
-    Object.keys(formData).forEach(name => {
+    Object.keys(formData).forEach((name) => {
       const error = validateField(name, formData[name]);
       newErrors[name] = error;
       if (error) isValid = false;
-      
+
       // Mark all fields as touched
-      setTouched(prev => ({
+      setTouched((prev) => ({
         ...prev,
-        [name]: true
+        [name]: true,
       }));
     });
-    
+
     setErrors(newErrors);
     return isValid;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     // Validate all fields before submission
     if (!validateForm()) {
       return;
     }
-    
+
     const { name, instructor, day, time, descr } = formData;
 
     if (courseToEdit) {
@@ -215,21 +214,21 @@ const CourseForm = ({ onSave, courseToEdit, courses = [] }) => {
         instructor: "",
         day: "",
         time: "",
-        descr: ""
+        descr: "",
       });
       setTouched({
         name: false,
         instructor: false,
         day: false,
         time: false,
-        descr: false
+        descr: false,
       });
       setErrors({
         name: "",
         instructor: "",
         day: "",
         time: "",
-        descr: ""
+        descr: "",
       });
     }
   };

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Student } from "../../models/Models";
 import { Box, Button, Paper, TextField, Typography } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -11,7 +11,7 @@ export default function StudentForm({ onSave, studentToEdit, students = [] }) {
     firstName: "",
     lastName: "",
     email: "",
-    birthDate: null
+    birthDate: null,
   });
 
   // Track touched fields for validation
@@ -20,7 +20,7 @@ export default function StudentForm({ onSave, studentToEdit, students = [] }) {
     firstName: false,
     lastName: false,
     email: false,
-    birthDate: false
+    birthDate: false,
   });
 
   // Track form errors
@@ -29,7 +29,7 @@ export default function StudentForm({ onSave, studentToEdit, students = [] }) {
     firstName: "",
     lastName: "",
     email: "",
-    birthDate: ""
+    birthDate: "",
   });
 
   // Update form when editing a student
@@ -40,7 +40,9 @@ export default function StudentForm({ onSave, studentToEdit, students = [] }) {
         firstName: studentToEdit.firstName || "",
         lastName: studentToEdit.lastName || "",
         email: studentToEdit.email || "",
-        birthDate: studentToEdit.birthDate ? dayjs(studentToEdit.birthDate) : null
+        birthDate: studentToEdit.birthDate
+          ? dayjs(studentToEdit.birthDate)
+          : null,
       });
       // Reset touched and errors when editing
       setTouched({
@@ -48,14 +50,14 @@ export default function StudentForm({ onSave, studentToEdit, students = [] }) {
         firstName: false,
         lastName: false,
         email: false,
-        birthDate: false
+        birthDate: false,
       });
       setErrors({
         id: "",
         firstName: "",
         lastName: "",
         email: "",
-        birthDate: ""
+        birthDate: "",
       });
     } else {
       // Reset form when not editing
@@ -64,7 +66,7 @@ export default function StudentForm({ onSave, studentToEdit, students = [] }) {
         firstName: "",
         lastName: "",
         email: "",
-        birthDate: null
+        birthDate: null,
       });
     }
   }, [studentToEdit]);
@@ -78,7 +80,7 @@ export default function StudentForm({ onSave, studentToEdit, students = [] }) {
           error = "מספר תעודת זהות הוא שדה חובה";
         } else if (!/^\d{9}$/.test(value)) {
           error = "תעודת זהות חייבת להכיל 9 ספרות";
-        } else if (!studentToEdit && students.some(s => s.id === value)) {
+        } else if (!studentToEdit && students.some((s) => s.id === value)) {
           error = "מספר תעודת זהות כבר קיים במערכת";
         }
         break;
@@ -119,96 +121,96 @@ export default function StudentForm({ onSave, studentToEdit, students = [] }) {
   // Handle blur event for validation
   const handleBlur = (e) => {
     const { name } = e.target;
-    setTouched(prev => ({
+    setTouched((prev) => ({
       ...prev,
-      [name]: true
+      [name]: true,
     }));
-    
+
     const error = validateField(name, formData[name]);
-    setErrors(prev => ({
+    setErrors((prev) => ({
       ...prev,
-      [name]: error
+      [name]: error,
     }));
   };
 
   // Handle change for text input fields
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
-    
+
     // If field has been touched, validate on change
     if (touched[name]) {
       const error = validateField(name, value);
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: error
+        [name]: error,
       }));
     }
   };
 
   // Special handler for DatePicker
   const handleDateChange = (newValue) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      birthDate: newValue
+      birthDate: newValue,
     }));
-    
+
     // If field has been touched, validate on change
     if (touched.birthDate) {
-      const error = validateField('birthDate', newValue);
-      setErrors(prev => ({
+      const error = validateField("birthDate", newValue);
+      setErrors((prev) => ({
         ...prev,
-        birthDate: error
+        birthDate: error,
       }));
     }
   };
 
   // Mark birthDate as touched when the date picker loses focus
   const handleDateBlur = () => {
-    setTouched(prev => ({
+    setTouched((prev) => ({
       ...prev,
-      birthDate: true
+      birthDate: true,
     }));
-    
-    const error = validateField('birthDate', formData.birthDate);
-    setErrors(prev => ({
+
+    const error = validateField("birthDate", formData.birthDate);
+    setErrors((prev) => ({
       ...prev,
-      birthDate: error
+      birthDate: error,
     }));
   };
 
   const validateForm = () => {
     const newErrors = {};
     let isValid = true;
-    
+
     // Validate all fields
-    Object.keys(formData).forEach(name => {
+    Object.keys(formData).forEach((name) => {
       const error = validateField(name, formData[name]);
       newErrors[name] = error;
       if (error) isValid = false;
-      
+
       // Mark all fields as touched
-      setTouched(prev => ({
+      setTouched((prev) => ({
         ...prev,
-        [name]: true
+        [name]: true,
       }));
     });
-    
+
     setErrors(newErrors);
     return isValid;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     // Validate all fields before submission
     if (!validateForm()) {
       return;
     }
-    
+
     const { id, firstName, lastName, email, birthDate } = formData;
 
     // Convert dayjs object to native Date before saving
@@ -221,7 +223,7 @@ export default function StudentForm({ onSave, studentToEdit, students = [] }) {
         lastName,
         email,
         birthDate: birthDateValue,
-        enrolledCourses: studentToEdit.enrolledCourses || []
+        enrolledCourses: studentToEdit.enrolledCourses || [],
       });
       onSave(updatedStudent);
     } else {
@@ -242,21 +244,21 @@ export default function StudentForm({ onSave, studentToEdit, students = [] }) {
         firstName: "",
         lastName: "",
         email: "",
-        birthDate: null
+        birthDate: null,
       });
       setTouched({
         id: false,
         firstName: false,
         lastName: false,
         email: false,
-        birthDate: false
+        birthDate: false,
       });
       setErrors({
         id: "",
         firstName: "",
         lastName: "",
         email: "",
-        birthDate: ""
+        birthDate: "",
       });
     }
   };
@@ -279,7 +281,7 @@ export default function StudentForm({ onSave, studentToEdit, students = [] }) {
           helperText={touched.id && errors.id}
           required
           disabled={!!studentToEdit} // Disable ID field when editing
-          inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+          inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
         />
 
         <TextField
@@ -314,15 +316,15 @@ export default function StudentForm({ onSave, studentToEdit, students = [] }) {
           onChange={handleDateChange}
           onClose={handleDateBlur}
           format="DD/MM/YYYY"
-          slotProps={{ 
-            textField: { 
+          slotProps={{
+            textField: {
               fullWidth: true,
               margin: "normal",
               required: true,
               placeholder: "DD/MM/YYYY",
               error: touched.birthDate && Boolean(errors.birthDate),
               helperText: touched.birthDate && errors.birthDate,
-            } 
+            },
           }}
           required
         />
