@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
   Routes,
   Route,
@@ -6,45 +6,39 @@ import {
   useLocation,
   Navigate,
 } from "react-router-dom";
-import { Box, Typography, Snackbar, Alert, Button } from "@mui/material";
+import { Box, Typography, Snackbar, Alert, Button, CircularProgress } from "@mui/material";
 import CourseForm from "./CourseForm";
 import CourseTable from "../common/shared/CourseTable";
 import CourseManager from "./CourseManager"; // Add this import
 import Sidebar from "../common/shared/Sidebar";
 import { Student } from "../../models/Models";
-import {
-  saveCoursesToLocalStorage,
-  getCoursesFromLocalStorage,
-} from "../../utils/localStorage";
 import DashboardCards from "../common/shared/DashboardCards";
 import InfoIcon from "@mui/icons-material/Info";
 import StudentForm from "./StudentForm";
 import StudentTable from "./StudentTable";
-import {
-  saveStudentsToLocalStorage,
-  getStudentsFromLocalStorage,
-} from "../../utils/localStorage";
 import AddIcon from "@mui/icons-material/Add";
 // Add import for Firebase services
 import { courseService, studentService } from "../../firebase";
+import Loading from "../common/shared/Loading";
 
 export default function AdminPortal() {
   // State to store all courses
   const [courses, setCourses] = useState([]);
   // State to track which course is being edited
   const [courseToEdit, setCourseToEdit] = useState(null);
-  // State to track which course is being managed
-  const [selectedCourse, setSelectedCourse] = useState(null);
-  // Ref to track initialization
-  const isFirstRenderRef = useRef(true);
   // Add state for the success message
   const [successAlert, setSuccessAlert] = useState({
     open: false,
     message: "",
     severity: "success", // Default severity
   });
+  // Add this with your other state variables
+const [loading, setLoading] = useState(true);
+const [loadingProgress, setLoadingProgress] = useState(0);
+const [loadingText, setLoadingText] = useState('מתחיל טעינה...');
+const [savingCourse, setSavingCourse] = useState(false);
 
-  // Add these new states for students
+// Add these new states for students
   const [students, setStudents] = useState([]);
   const [studentToEdit, setStudentToEdit] = useState(null);
 
@@ -71,14 +65,19 @@ export default function AdminPortal() {
   // Update the useEffect to load data from Firestore
   useEffect(() => {
     const loadData = async () => {
+      setLoading(true);
+      setLoadingProgress(0);
+      setLoadingText('טוען קורסים...');
+      
       try {
         console.log("Loading data from Firestore...");
 
-        // Load courses with subcollections for dashboard
+        // Load courses
         const coursesData = await courseService.getAll();
-
-        // Load detailed data for the first few courses (to improve dashboard performance)
-        // This ensures we have actual subcollections for the dashboard counts
+        setLoadingProgress(30);
+        
+        setLoadingText('טוען פרטי קורסים...');
+        // Load course details
         const courseDetails = await Promise.all(
           coursesData
             .slice(0, 5)
@@ -95,14 +94,16 @@ export default function AdminPortal() {
 
         setCourses(enhancedCourses);
 
+        setLoadingProgress(70);
+        
+        setLoadingText('טוען סטודנטים...');
         // Load students
         const studentsData = await studentService.getAll();
         setStudents(studentsData);
-
-        console.log("Data loaded successfully:", {
-          courses: enhancedCourses.length,
-          students: studentsData.length,
-        });
+        
+        setLoadingProgress(100);
+        setLoadingText('הטעינה הושלמה');
+        
       } catch (error) {
         console.error("Error loading data from Firestore:", error);
         setSuccessAlert({
@@ -110,6 +111,8 @@ export default function AdminPortal() {
           message: `שגיאה בטעינת נתונים: ${error.message}`,
           severity: "error",
         });
+      } finally {
+        setTimeout(() => setLoading(false), 500); // Short delay so users see 100%
       }
     };
 
@@ -119,6 +122,9 @@ export default function AdminPortal() {
   // Function to handle saving a new or edited course
   const handleSaveCourse = async (course) => {
     try {
+      // Set loading state to true before saving
+      setSavingCourse(true);
+      
       if (courseToEdit) {
         // Update existing course
         const updatedCourse = await courseService.update(course);
@@ -155,6 +161,9 @@ export default function AdminPortal() {
         message: `שגיאה בשמירת הקורס: ${error.message}`,
         severity: "error",
       });
+    } finally {
+      // Always reset loading state
+      setSavingCourse(false);
     }
   };
 
@@ -393,6 +402,11 @@ export default function AdminPortal() {
     return students.find((student) => student.id === id) || null;
   };
 
+  // In your render function, before the return statement
+  if (loading) {
+    return <Loading progress={loadingProgress} message={loadingText} />;
+  }
+
   return (
     <Box sx={{ width: "100%", maxWidth: "100%" }}>
       <Box sx={{ display: "flex", alignItems: "center", p: 2, gap: 9 }}>
@@ -508,11 +522,15 @@ export default function AdminPortal() {
               path="/courses/new"
               element={
                 <Box>
-                  <Typography variant="h5" gutterBottom>
-                    הוספת קורס חדש
-                  </Typography>
-                  <CourseForm onSave={handleSaveCourse} courses={courses} />
-                </Box>
+      <Typography variant="h5" gutterBottom>
+        הוספת קורס חדש
+      </Typography>
+      <CourseForm 
+        onSave={handleSaveCourse} 
+        courses={courses} 
+        isSaving={savingCourse} 
+      />
+    </Box>
               }
             />
 
@@ -520,19 +538,20 @@ export default function AdminPortal() {
               path="/courses/edit/:id"
               element={
                 <Box>
-                  <Typography variant="h5" gutterBottom>
-                    עריכת קורס
-                  </Typography>
-                  {location.pathname.includes("/edit/") && (
-                    <CourseForm
-                      onSave={handleSaveCourse}
-                      courseToEdit={getCourseById(
-                        location.pathname.split("/").pop()
-                      )}
-                      courses={courses}
-                    />
-                  )}
-                </Box>
+      <Typography variant="h5" gutterBottom>
+        עריכת קורס
+      </Typography>
+      {location.pathname.includes("/edit/") && (
+        <CourseForm
+          onSave={handleSaveCourse}
+          courseToEdit={getCourseById(
+            location.pathname.split("/").pop()
+          )}
+          courses={courses}
+          isSaving={savingCourse}
+        />
+      )}
+    </Box>
               }
             />
 

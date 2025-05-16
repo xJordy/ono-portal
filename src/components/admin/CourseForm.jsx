@@ -6,6 +6,7 @@ import {
   Typography,
   Paper,
   MenuItem,
+  CircularProgress,
 } from "@mui/material";
 import { Course } from "../../models/Models";
 
@@ -17,7 +18,7 @@ const generateUniqueId = (existingIds) => {
   return id;
 };
 
-const CourseForm = ({ onSave, courseToEdit, courses = [] }) => {
+const CourseForm = ({ onSave, courseToEdit, courses = [], isSaving = false }) => {
   // Form data state
   const [formData, setFormData] = useState({
     name: "",
@@ -330,9 +331,17 @@ const CourseForm = ({ onSave, courseToEdit, courses = [] }) => {
           type="submit"
           variant="contained"
           color="primary"
+          disabled={isSaving}
           sx={{ mt: 2 }}
         >
-          {courseToEdit ? "עדכן קורס" : "הוסף קורס"}
+          {isSaving ? (
+            <>
+              <CircularProgress size={24} sx={{ mr: 1 }} color="inherit" />
+              {courseToEdit ? "מעדכן..." : "מוסיף..."}
+            </>
+          ) : (
+            courseToEdit ? "עדכן קורס" : "הוסף קורס"
+          )}
         </Button>
       </Box>
     </Paper>
