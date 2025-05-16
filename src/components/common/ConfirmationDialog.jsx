@@ -16,7 +16,8 @@ const ConfirmationDialog = ({
   message,
   confirmText = "אישור",
   cancelText = "ביטול",
-  severity = "error", // can be "error", "warning", etc.
+  severity = "error",
+  disabled = false, // Add this new prop
 }) => {
   return (
     <Dialog open={open} onClose={onClose} dir="rtl">
@@ -25,12 +26,13 @@ const ConfirmationDialog = ({
         <DialogContentText>{message}</DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{cancelText}</Button>
+        <Button onClick={onClose} disabled={disabled}>{cancelText}</Button>
         <Button
           onClick={onConfirm}
           color={severity}
           variant="contained"
           autoFocus
+          disabled={disabled}
         >
           {confirmText}
         </Button>

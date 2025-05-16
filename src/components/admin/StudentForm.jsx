@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Student } from "../../models/Models";
-import { Box, Button, Paper, TextField, Typography } from "@mui/material";
+import { Box, Button, Paper, TextField, Typography, CircularProgress } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
 
-export default function StudentForm({ onSave, studentToEdit, students = [] }) {
+export default function StudentForm({ onSave, studentToEdit, students = [], isSaving = false }) {
   // Form data state
   const [formData, setFormData] = useState({
     id: "",
@@ -347,9 +347,17 @@ export default function StudentForm({ onSave, studentToEdit, students = [] }) {
           type="submit"
           variant="contained"
           color="primary"
+          disabled={isSaving}
           sx={{ mt: 2 }}
         >
-          {studentToEdit ? "עדכן סטודנט" : "הוסף סטודנט"}
+          {isSaving ? (
+            <>
+              <CircularProgress size={24} sx={{ mr: 1 }} color="inherit" />
+              {studentToEdit ? "מעדכן..." : "מוסיף..."}
+            </>
+          ) : (
+            studentToEdit ? "עדכן סטודנט" : "הוסף סטודנט"
+          )}
         </Button>
       </Box>
     </Paper>

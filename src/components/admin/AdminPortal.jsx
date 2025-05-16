@@ -6,7 +6,7 @@ import {
   useLocation,
   Navigate,
 } from "react-router-dom";
-import { Box, Typography, Snackbar, Alert, Button, CircularProgress } from "@mui/material";
+import { Box, Typography, Snackbar, Alert, Button } from "@mui/material";
 import CourseForm from "./CourseForm";
 import CourseTable from "../common/shared/CourseTable";
 import CourseManager from "./CourseManager"; // Add this import
@@ -26,6 +26,11 @@ export default function AdminPortal() {
   const [courses, setCourses] = useState([]);
   // State to track which course is being edited
   const [courseToEdit, setCourseToEdit] = useState(null);
+  // State to track which course is being managed
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  // Ref to track initialization
+  // const isFirstRenderRef = useRef(true);
+
   // Add state for the success message
   const [successAlert, setSuccessAlert] = useState({
     open: false,
@@ -33,12 +38,13 @@ export default function AdminPortal() {
     severity: "success", // Default severity
   });
   // Add this with your other state variables
-const [loading, setLoading] = useState(true);
-const [loadingProgress, setLoadingProgress] = useState(0);
-const [loadingText, setLoadingText] = useState('מתחיל טעינה...');
-const [savingCourse, setSavingCourse] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingText, setLoadingText] = useState("מתחיל טעינה...");
+  const [savingCourse, setSavingCourse] = useState(false);
+  const [savingStudent, setSavingStudent] = useState(false);
 
-// Add these new states for students
+  // Add these new states for students
   const [students, setStudents] = useState([]);
   const [studentToEdit, setStudentToEdit] = useState(null);
 
@@ -67,16 +73,16 @@ const [savingCourse, setSavingCourse] = useState(false);
     const loadData = async () => {
       setLoading(true);
       setLoadingProgress(0);
-      setLoadingText('טוען קורסים...');
-      
+      setLoadingText("טוען קורסים...");
+
       try {
         console.log("Loading data from Firestore...");
 
         // Load courses
         const coursesData = await courseService.getAll();
         setLoadingProgress(30);
-        
-        setLoadingText('טוען פרטי קורסים...');
+
+        setLoadingText("טוען פרטי קורסים...");
         // Load course details
         const courseDetails = await Promise.all(
           coursesData
@@ -95,15 +101,14 @@ const [savingCourse, setSavingCourse] = useState(false);
         setCourses(enhancedCourses);
 
         setLoadingProgress(70);
-        
-        setLoadingText('טוען סטודנטים...');
+
+        setLoadingText("טוען סטודנטים...");
         // Load students
         const studentsData = await studentService.getAll();
         setStudents(studentsData);
-        
+
         setLoadingProgress(100);
-        setLoadingText('הטעינה הושלמה');
-        
+        setLoadingText("הטעינה הושלמה");
       } catch (error) {
         console.error("Error loading data from Firestore:", error);
         setSuccessAlert({
@@ -124,7 +129,7 @@ const [savingCourse, setSavingCourse] = useState(false);
     try {
       // Set loading state to true before saving
       setSavingCourse(true);
-      
+
       if (courseToEdit) {
         // Update existing course
         const updatedCourse = await courseService.update(course);
@@ -170,6 +175,9 @@ const [savingCourse, setSavingCourse] = useState(false);
   // Add these student management functions
   const handleSaveStudent = async (student) => {
     try {
+      // Set loading state to true before saving
+      setSavingStudent(true);
+
       if (studentToEdit) {
         // Update existing student
         const updatedStudent = await studentService.update(student);
@@ -206,6 +214,9 @@ const [savingCourse, setSavingCourse] = useState(false);
         message: `שגיאה בשמירת הסטודנט: ${error.message}`,
         severity: "error",
       });
+    } finally {
+      // Always reset loading state
+      setSavingStudent(false);
     }
   };
 
@@ -281,8 +292,17 @@ const [savingCourse, setSavingCourse] = useState(false);
         message: `${courseName} נמחק בהצלחה!`,
         severity: "info",
       });
+
+      // Return the result explicitly
+      return true;
     } catch (error) {
-      // Error handling...
+      console.error(`Error deleting course ${courseId}:`, error);
+      setSuccessAlert({
+        open: true,
+        message: `שגיאה במחיקת הקורס: ${error.message}`,
+        severity: "error",
+      });
+      throw error; // Re-throw to allow error handling in the component
     }
   };
 
@@ -332,8 +352,18 @@ const [savingCourse, setSavingCourse] = useState(false);
         message: `${studentName} נמחק בהצלחה!`,
         severity: "info",
       });
+
+      // Return a resolved promise to indicate success
+      return true;
     } catch (error) {
-      // Error handling...
+      console.error(`Error deleting student ${studentId}:`, error);
+      setSuccessAlert({
+        open: true,
+        message: `שגיאה במחיקת הסטודנט: ${error.message}`,
+        severity: "error",
+      });
+      // Re-throw to allow error handling in the component
+      throw error;
     }
   };
 
@@ -522,15 +552,15 @@ const [savingCourse, setSavingCourse] = useState(false);
               path="/courses/new"
               element={
                 <Box>
-      <Typography variant="h5" gutterBottom>
-        הוספת קורס חדש
-      </Typography>
-      <CourseForm 
-        onSave={handleSaveCourse} 
-        courses={courses} 
-        isSaving={savingCourse} 
-      />
-    </Box>
+                  <Typography variant="h5" gutterBottom>
+                    הוספת קורס חדש
+                  </Typography>
+                  <CourseForm
+                    onSave={handleSaveCourse}
+                    courses={courses}
+                    isSaving={savingCourse}
+                  />
+                </Box>
               }
             />
 
@@ -538,20 +568,20 @@ const [savingCourse, setSavingCourse] = useState(false);
               path="/courses/edit/:id"
               element={
                 <Box>
-      <Typography variant="h5" gutterBottom>
-        עריכת קורס
-      </Typography>
-      {location.pathname.includes("/edit/") && (
-        <CourseForm
-          onSave={handleSaveCourse}
-          courseToEdit={getCourseById(
-            location.pathname.split("/").pop()
-          )}
-          courses={courses}
-          isSaving={savingCourse}
-        />
-      )}
-    </Box>
+                  <Typography variant="h5" gutterBottom>
+                    עריכת קורס
+                  </Typography>
+                  {location.pathname.includes("/edit/") && (
+                    <CourseForm
+                      onSave={handleSaveCourse}
+                      courseToEdit={getCourseById(
+                        location.pathname.split("/").pop()
+                      )}
+                      courses={courses}
+                      isSaving={savingCourse}
+                    />
+                  )}
+                </Box>
               }
             />
 
@@ -624,7 +654,11 @@ const [savingCourse, setSavingCourse] = useState(false);
                   <Typography variant="h5" gutterBottom>
                     הוספת סטודנט חדש
                   </Typography>
-                  <StudentForm onSave={handleSaveStudent} students={students} />
+                  <StudentForm
+                    onSave={handleSaveStudent}
+                    students={students}
+                    isSaving={savingStudent}
+                  />
                 </Box>
               }
             />
@@ -643,6 +677,7 @@ const [savingCourse, setSavingCourse] = useState(false);
                         location.pathname.split("/").pop()
                       )}
                       students={students}
+                      isSaving={savingStudent}
                     />
                   )}
                 </Box>

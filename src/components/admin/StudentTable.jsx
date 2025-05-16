@@ -7,6 +7,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  CircularProgress, // Add this import
 } from "@mui/material";
 import { useState } from "react";
 import ConfirmationDialog from "../common/ConfirmationDialog";
@@ -36,21 +37,42 @@ export default function StudentTable({
   skipConfirmation = false, // Add this prop
 }) {
   const [studentToDelete, setStudentToDelete] = useState(null);
+  const [deletingStudentId, setDeletingStudentId] = useState(null); // Add this state variable
 
   const handleDeleteClick = (studentId, e) => {
     e.stopPropagation();
     if (skipConfirmation) {
       // Call delete directly if confirmation is skipped
-      onDelete(studentId);
+      handleDeleteStudent(studentId);
     } else {
       // Show confirmation dialog as usual
       setStudentToDelete(studentId);
     }
   };
 
-  const handleConfirmDelete = () => {
-    onDelete(studentToDelete);
-    setStudentToDelete(null);
+  // Add this new function to handle direct deletion (for skipConfirmation case)
+  const handleDeleteStudent = async (studentId) => {
+    setDeletingStudentId(studentId);
+    try {
+      await onDelete(studentId);
+    } catch (error) {
+      console.error("Error deleting student:", error);
+    } finally {
+      setDeletingStudentId(null);
+    }
+  };
+
+  // Make confirm delete asynchronous
+  const handleConfirmDelete = async () => {
+    setDeletingStudentId(studentToDelete);
+    try {
+      await onDelete(studentToDelete);
+    } catch (error) {
+      console.error("Error deleting student:", error);
+    } finally {
+      setStudentToDelete(null);
+      setDeletingStudentId(null);
+    }
   };
 
   return (
@@ -96,6 +118,7 @@ export default function StudentTable({
                         color="primary"
                         size="small"
                         onClick={() => onEdit(student)}
+                        disabled={deletingStudentId === student.id}
                       >
                         ערוך
                       </Button>
@@ -107,8 +130,12 @@ export default function StudentTable({
                         size="small"
                         sx={{ ml: actionButtons.edit ? 1 : 0 }}
                         onClick={(e) => handleDeleteClick(student.id, e)}
+                        disabled={deletingStudentId === student.id}
                       >
-                        מחק
+                        {deletingStudentId === student.id ? (
+                          <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
+                        ) : null}
+                        {deletingStudentId === student.id ? "מוחק..." : "מחק"}
                       </Button>
                     )}
                   </TableCell>
@@ -125,8 +152,9 @@ export default function StudentTable({
         onConfirm={handleConfirmDelete}
         title="אישור מחיקה"
         message="האם אתה בטוח שברצונך למחוק את הסטודנט הזה? פעולה זו לא ניתנת לביטול."
-        confirmText="כן, מחק"
+        confirmText={deletingStudentId ? "מוחק..." : "כן, מחק"}
         cancelText="לא, השאר את הסטודנט"
+        disabled={deletingStudentId !== null}
       />
     </>
   );

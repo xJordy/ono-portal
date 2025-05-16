@@ -8,6 +8,7 @@ import {
   TableRow,
   Paper,
   Button,
+  CircularProgress,
 } from "@mui/material";
 import ConfirmationDialog from "../ConfirmationDialog";
 
@@ -27,15 +28,27 @@ const CourseTable = ({
   },
 }) => {
   const [courseToDelete, setCourseToDelete] = useState(null);
+  const [deletingCourseId, setDeletingCourseId] = useState(null); // Add this new state
 
   const handleDeleteClick = (courseId, e) => {
     e.stopPropagation();
     setCourseToDelete(courseId);
   };
 
-  const handleConfirmDelete = () => {
-    onDelete(courseToDelete);
-    setCourseToDelete(null);
+  const handleConfirmDelete = async () => {
+    // Set loading state
+    setDeletingCourseId(courseToDelete);
+
+    try {
+      // Call the delete function
+      await onDelete(courseToDelete);
+    } catch (error) {
+      console.error("Error deleting course:", error);
+    } finally {
+      // Reset states regardless of outcome
+      setCourseToDelete(null);
+      setDeletingCourseId(null);
+    }
   };
 
   const handleRowClick = (course) => {
@@ -131,8 +144,12 @@ const CourseTable = ({
                         size="small"
                         onClick={(e) => handleDeleteClick(course.id, e)}
                         sx={{ ml: 1 }}
+                        disabled={deletingCourseId === course.id}
                       >
-                        {buttonLabels.delete}
+                        {deletingCourseId === course.id ? (
+                          <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
+                        ) : null}
+                        {deletingCourseId === course.id ? "מוחק..." : buttonLabels.delete}
                       </Button>
                     )}
                   </TableCell>
@@ -150,7 +167,8 @@ const CourseTable = ({
           onConfirm={handleConfirmDelete}
           title="האם למחוק את הקורס?"
           message="פעולה זו תמחק את הקורס לצמיתות ותגרום לאובדן כל המטלות, הודעות ורשימות הסטודנטים הקשורים אליו. האם אתה בטוח?"
-          confirmText="כן, מחק קורס"
+          confirmText={deletingCourseId ? "מוחק..." : "כן, מחק קורס"}
+          disabled={deletingCourseId !== null}
         />
       )}
     </>
