@@ -20,6 +20,7 @@ import {
   InputAdornment,
   DialogContentText,
   ListItemButton,
+  CircularProgress
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
@@ -111,6 +112,10 @@ const ManageCourse = ({
   const [assignmentToDelete, setAssignmentToDelete] = useState(null);
   const [messageToDelete, setMessageToDelete] = useState(null);
   const [studentToDelete, setStudentToDelete] = useState(null);
+  // Loadeing states
+  const [savingAssignment, setSavingAssignment] = useState(false);
+  const [savingMessage, setSavingMessage] = useState(false);
+  const [addingStudents, setAddingStudents] = useState(false);
 
   // Add success alert state
   const [successAlert, setSuccessAlert] = useState({
@@ -318,6 +323,8 @@ const ManageCourse = ({
   // Update the assignment submission handler
   const handleSubmitAssignment = async (formData) => {
     try {
+      setSavingAssignment(true); // Start saving
+
       if (assignmentToEdit) {
         // Update existing assignment in Firestore
         const updatedAssignment = await courseService.updateAssignment(
@@ -405,12 +412,17 @@ const ManageCourse = ({
         message: `שגיאה בשמירת המטלה: ${error.message}`,
         severity: "error",
       });
+    } finally {
+      setSavingAssignment(false); // End saving
     }
   };
 
   // Update the message handler
   const handleAddMessage = async (formData) => {
     try {
+      // Set loading state to true before saving
+      setSavingMessage(true);
+      
       // Create new message object
       const newMessage = new Message(
         null, // ID will be assigned by Firestore
@@ -456,6 +468,9 @@ const ManageCourse = ({
         message: `שגיאה בשמירת ההודעה: ${error.message}`,
         severity: "error",
       });
+    } finally {
+      // Always reset loading state
+      setSavingMessage(false);
     }
   };
 
@@ -517,6 +532,9 @@ const ManageCourse = ({
     if (selectedStudents.length === 0) return;
 
     try {
+      // Set loading state to true before enrollment
+      setAddingStudents(true);
+      
       // Create array for batch processing
       const enrollmentPromises = [];
 
@@ -583,6 +601,9 @@ const ManageCourse = ({
         message: "שגיאה ברישום הסטודנטים לקורס",
         severity: "error",
       });
+    } finally {
+      // Always reset loading state
+      setAddingStudents(false);
     }
   };
 
@@ -837,9 +858,11 @@ const ManageCourse = ({
       <Dialog
         open={openAssignmentDialog}
         onClose={() => {
-          setOpenAssignmentDialog(false);
-          setAssignmentToEdit(null);
-          setNewAssignment({ title: "", description: "", dueDate: "" });
+          if (!savingAssignment) { // Prevent closing during saving
+            setOpenAssignmentDialog(false);
+            setAssignmentToEdit(null);
+            setNewAssignment({ title: "", description: "", dueDate: "" });
+          }
         }}
         disableRestoreFocus
         disableEnforceFocus={false}
@@ -853,13 +876,18 @@ const ManageCourse = ({
           isEditMode={!!assignmentToEdit}
           onSubmit={handleSubmitAssignment}
           onCancel={() => setOpenAssignmentDialog(false)}
+          isSaving={savingAssignment} // Pass the saving state here
         />
       </Dialog>
 
       {/* Message Dialog */}
       <Dialog
         open={openMessageDialog}
-        onClose={() => setOpenMessageDialog(false)}
+        onClose={() => {
+          if (!savingMessage) { // Prevent closing during saving
+            setOpenMessageDialog(false);
+          }
+        }}
         disableRestoreFocus
         disableEnforceFocus={false}
         disableAutoFocus={false}
@@ -868,6 +896,7 @@ const ManageCourse = ({
         <MessageForm
           onSubmit={handleAddMessage}
           onCancel={() => setOpenMessageDialog(false)}
+          isSaving={savingMessage} // Pass the saving state here
         />
       </Dialog>
 
@@ -875,9 +904,11 @@ const ManageCourse = ({
       <Dialog
         open={openStudentDialog}
         onClose={() => {
-          setOpenStudentDialog(false);
-          setSelectedStudents([]);
-          setSearchQuery("");
+          if (!addingStudents) { // Prevent closing during enrollment
+            setOpenStudentDialog(false);
+            setSelectedStudents([]);
+            setSearchQuery("");
+          }
         }}
         fullWidth
         maxWidth="md"
@@ -982,19 +1013,27 @@ const ManageCourse = ({
               setSelectedStudents([]);
               setSearchQuery("");
             }}
+            disabled={addingStudents}
           >
             ביטול
           </Button>
           <Button
             onClick={handleAddStudents}
             variant="contained"
-            disabled={selectedStudents.length === 0}
+            disabled={selectedStudents.length === 0 || addingStudents}
           >
-            {selectedStudents.length === 0
-              ? "בחר סטודנטים"
-              : selectedStudents.length === 1
-              ? "הוסף סטודנט"
-              : `הוסף ${selectedStudents.length} סטודנטים`}
+            {addingStudents ? (
+      <>
+        <CircularProgress size={24} sx={{ mr: 1 }} color="inherit" />
+        {"מוסיף..."}
+      </>
+    ) : selectedStudents.length === 0 ? (
+      "בחר סטודנטים"
+    ) : selectedStudents.length === 1 ? (
+      "הוסף סטודנט"
+    ) : (
+      `הוסף ${selectedStudents.length} סטודנטים`
+    )}
           </Button>
         </DialogActions>
       </Dialog>

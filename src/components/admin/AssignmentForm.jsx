@@ -1,7 +1,13 @@
 import { useState, useEffect } from "react";
-import { TextField, DialogContent, DialogActions, Button } from "@mui/material";
+import { TextField, DialogContent, DialogActions, Button, CircularProgress } from "@mui/material";
 
-const AssignmentForm = ({ assignment, onSubmit, onCancel, isEditMode }) => {
+const AssignmentForm = ({ 
+  assignment, 
+  onSubmit, 
+  onCancel, 
+  isEditMode,
+  isSaving = false // Add this prop with default value
+}) => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -201,11 +207,26 @@ const AssignmentForm = ({ assignment, onSubmit, onCancel, isEditMode }) => {
         />
       </DialogContent>
       <DialogActions>
-        <Button type="button" onClick={onCancel}>
+        <Button 
+          type="button" 
+          onClick={onCancel}
+          disabled={isSaving}
+        >
           ביטול
         </Button>
-        <Button type="submit" variant="contained">
-          {isEditMode ? "עדכן מטלה" : "הוסף מטלה"}
+        <Button 
+          type="submit" 
+          variant="contained"
+          disabled={isSaving}
+        >
+          {isSaving ? (
+            <>
+              <CircularProgress size={24} sx={{ mr: 1 }} color="inherit" />
+              {isEditMode ? "מעדכן..." : "מוסיף..."}
+            </>
+          ) : (
+            isEditMode ? "עדכן מטלה" : "הוסף מטלה"
+          )}
         </Button>
       </DialogActions>
     </form>

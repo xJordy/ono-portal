@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { TextField, DialogContent, DialogActions, Button } from "@mui/material";
+import { TextField, DialogContent, DialogActions, Button, CircularProgress } from "@mui/material";
 
-const MessageForm = ({ onSubmit, onCancel }) => {
+const MessageForm = ({ onSubmit, onCancel, isSaving = false }) => {
   const [formData, setFormData] = useState({
     title: "",
     content: "",
@@ -160,11 +160,26 @@ const MessageForm = ({ onSubmit, onCancel }) => {
         />
       </DialogContent>
       <DialogActions>
-        <Button type="button" onClick={onCancel}>
+        <Button 
+          type="button" 
+          onClick={onCancel}
+          disabled={isSaving}
+        >
           ביטול
         </Button>
-        <Button type="submit" variant="contained">
-          שלח
+        <Button 
+          type="submit" 
+          variant="contained"
+          disabled={isSaving}
+        >
+          {isSaving ? (
+            <>
+              <CircularProgress size={24} sx={{ mr: 1 }} color="inherit" />
+              {"שולח..."}
+            </>
+          ) : (
+            "שלח"
+          )}
         </Button>
       </DialogActions>
     </form>

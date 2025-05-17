@@ -637,10 +637,10 @@ export default function AdminPortal() {
                     columnWidths={{
                       id: "10%",
                       firstName: "10%",
-                      lastName: "15%",
-                      email: "25%",
-                      birthDate: "10%",
-                      actions: "20%",
+                      lastName: "10%",
+                      email: "20%",
+                      birthDate: "20%",
+                      actions: "30%",
                     }}
                   />
                 </Box>
