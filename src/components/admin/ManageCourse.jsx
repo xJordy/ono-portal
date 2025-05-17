@@ -116,6 +116,9 @@ const ManageCourse = ({
   const [savingAssignment, setSavingAssignment] = useState(false);
   const [savingMessage, setSavingMessage] = useState(false);
   const [addingStudents, setAddingStudents] = useState(false);
+  const [deletingAssignmentId, setDeletingAssignmentId] = useState(null);
+  const [deletingMessageId, setDeletingMessageId] = useState(null);
+  const [removingStudentId, setRemovingStudentId] = useState(null);
 
   // Add success alert state
   const [successAlert, setSuccessAlert] = useState({
@@ -262,6 +265,9 @@ const ManageCourse = ({
 
   const handleConfirmDeleteAssignment = async () => {
     try {
+      // Set the deleting state to show spinner
+      setDeletingAssignmentId(assignmentToDelete);
+      
       // Find assignment to get title for success message
       const assignment = currentCourse.assignments.find(
         (a) => a.id === assignmentToDelete
@@ -298,9 +304,6 @@ const ManageCourse = ({
         message: `${assignmentTitle} נמחקה בהצלחה!`,
         severity: "info",
       });
-
-      // Reset state
-      setAssignmentToDelete(null);
     } catch (error) {
       console.error(`Error deleting assignment ${assignmentToDelete}:`, error);
       setSuccessAlert({
@@ -308,6 +311,9 @@ const ManageCourse = ({
         message: `שגיאה במחיקת המטלה: ${error.message}`,
         severity: "error",
       });
+    } finally {
+      // Reset states
+      setDeletingAssignmentId(null);
       setAssignmentToDelete(null);
     }
   };
@@ -480,6 +486,9 @@ const ManageCourse = ({
 
   const handleConfirmDeleteMessage = async () => {
     try {
+      // Set deleting state to show spinner
+      setDeletingMessageId(messageToDelete);
+      
       // Find message to get title for success message
       const message = currentCourse.messages.find(
         (m) => m.id === messageToDelete
@@ -513,9 +522,6 @@ const ManageCourse = ({
         message: `${messageTitle} נמחקה בהצלחה!`,
         severity: "info",
       });
-
-      // Reset state
-      setMessageToDelete(null);
     } catch (error) {
       console.error(`Error deleting message ${messageToDelete}:`, error);
       setSuccessAlert({
@@ -523,6 +529,9 @@ const ManageCourse = ({
         message: `שגיאה במחיקת ההודעה: ${error.message}`,
         severity: "error",
       });
+    } finally {
+      // Reset states
+      setDeletingMessageId(null);
       setMessageToDelete(null);
     }
   };
@@ -613,6 +622,9 @@ const ManageCourse = ({
 
   const handleConfirmDeleteStudent = async () => {
     try {
+      // Set removing state to show spinner
+      setRemovingStudentId(studentToDelete);
+      
       // Get student details for success message
       const student = allStudents.find((s) => s.id === studentToDelete);
       const studentName = student
@@ -647,9 +659,6 @@ const ManageCourse = ({
         message: `${studentName} הוסר מהקורס בהצלחה!`,
         severity: "info",
       });
-
-      // Reset state
-      setStudentToDelete(null);
     } catch (error) {
       console.error(`Error removing student ${studentToDelete}:`, error);
       setSuccessAlert({
@@ -657,6 +666,9 @@ const ManageCourse = ({
         message: `שגיאה בהסרת הסטודנט: ${error.message}`,
         severity: "error",
       });
+    } finally {
+      // Reset states
+      setRemovingStudentId(null);
       setStudentToDelete(null);
     }
   };
@@ -752,8 +764,13 @@ const ManageCourse = ({
                     <IconButton
                       onClick={() => handleDeleteAssignment(assignment.id)}
                       color="error"
+                      disabled={deletingAssignmentId === assignment.id}
                     >
-                      <DeleteIcon />
+                      {deletingAssignmentId === assignment.id ? (
+                        <CircularProgress size={20} color="inherit" />
+                      ) : (
+                        <DeleteIcon />
+                      )}
                     </IconButton>
                   </Box>
                 </Box>
@@ -794,8 +811,13 @@ const ManageCourse = ({
                   <IconButton
                     onClick={() => handleDeleteMessage(message.id)}
                     color="error"
+                    disabled={deletingMessageId === message.id}
                   >
-                    <DeleteIcon />
+                    {deletingMessageId === message.id ? (
+                      <CircularProgress size={20} color="inherit" />
+                    ) : (
+                      <DeleteIcon />
+                    )}
                   </IconButton>
                 </Box>
                 <Typography variant="subtitle2" sx={{ mb: 1.5 }}>
@@ -1040,29 +1062,32 @@ const ManageCourse = ({
 
       <ConfirmationDialog
         open={assignmentToDelete !== null}
-        onClose={() => setAssignmentToDelete(null)}
+        onClose={() => !deletingAssignmentId && setAssignmentToDelete(null)}
         onConfirm={handleConfirmDeleteAssignment}
         title="האם למחוק את המטלה?"
         message="פעולה זו תמחק את המטלה באופן מוחלט. האם אתה בטוח?"
-        confirmText="כן, מחק מטלה"
+        confirmText={deletingAssignmentId ? "מוחק..." : "כן, מחק מטלה"}
+        disabled={deletingAssignmentId !== null}
       />
 
       <ConfirmationDialog
         open={messageToDelete !== null}
-        onClose={() => setMessageToDelete(null)}
+        onClose={() => !deletingMessageId && setMessageToDelete(null)}
         onConfirm={handleConfirmDeleteMessage}
         title="האם למחוק את ההודעה?"
         message="פעולה זו תמחק את ההודעה באופן מוחלט. האם אתה בטוח?"
-        confirmText="כן, מחק הודעה"
+        confirmText={deletingMessageId ? "מוחק..." : "כן, מחק הודעה"}
+        disabled={deletingMessageId !== null}
       />
 
       <ConfirmationDialog
         open={studentToDelete !== null}
-        onClose={() => setStudentToDelete(null)}
+        onClose={() => !removingStudentId && setStudentToDelete(null)}
         onConfirm={handleConfirmDeleteStudent}
         title="האם להסיר את הסטודנט מהקורס?"
         message="פעולה זו תסיר את הסטודנט מרשימת המשתתפים בקורס. האם אתה בטוח?"
-        confirmText="כן, הסר את הסטודנט"
+        confirmText={removingStudentId ? "מסיר..." : "כן, הסר את הסטודנט"}
+        disabled={removingStudentId !== null}
       />
 
       <Snackbar
