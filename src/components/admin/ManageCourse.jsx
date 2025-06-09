@@ -544,28 +544,23 @@ const ManageCourse = ({
       // Set loading state to true before enrollment
       setAddingStudents(true);
       
-      // Create array for batch processing
-      const enrollmentPromises = [];
-
       // Find the selected student objects
       const studentsToAdd = allStudents.filter((student) =>
         selectedStudents.includes(student.id)
       );
 
-      // Process each student enrollment
+      // Process enrollments sequentially instead of concurrently to avoid race conditions
       for (const student of studentsToAdd) {
-        // Add to both course and student records in Firestore
-        enrollmentPromises.push(
-          courseService
-            .enrollStudent(currentCourse.id, student.id)
-            .then(() =>
-              studentService.enrollInCourse(student.id, currentCourse.id)
-            )
-        );
+        try {
+          // Enroll student in course
+          await courseService.enrollStudent(currentCourse.id, student.id);
+          // Add course to student's enrolled courses
+          await studentService.enrollInCourse(student.id, currentCourse.id);
+        } catch (error) {
+          console.error(`Error enrolling student ${student.id}:`, error);
+          // Continue with other students even if one fails
+        }
       }
-
-      // Wait for all enrollments to complete
-      await Promise.all(enrollmentPromises);
 
       // Update local state with the new student IDs
       const updatedStudentIds = [
