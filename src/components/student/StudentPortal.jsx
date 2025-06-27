@@ -257,7 +257,10 @@ export default function StudentPortal() {
                 אין מטלות להציג כי הסטודנט אינו רשום לאף קורס.
               </Typography>
             ) : (
-              <StudentAssignmentsTable courses={studentCourses} />
+              <StudentAssignmentsTable 
+                courses={studentCourses} 
+                selectedStudentId={selectedStudentId}
+              />
             )}
           </Box>
         );

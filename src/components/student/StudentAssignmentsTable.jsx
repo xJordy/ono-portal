@@ -8,8 +8,11 @@ import {
   TableBody,
   Typography,
 } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
-const StudentAssignmentsTable = ({ courses }) => {
+const StudentAssignmentsTable = ({ courses, selectedStudentId }) => {
+  const navigate = useNavigate();
+
   // Extract all assignments from all courses
   const assignments = courses.flatMap((course) =>
     (course.assignments || []).map((assignment) => ({
@@ -23,6 +26,13 @@ const StudentAssignmentsTable = ({ courses }) => {
   const sortedAssignments = [...assignments].sort(
     (a, b) => new Date(a.dueDate) - new Date(b.dueDate)
   );
+
+  // Handle row click to navigate to course view
+  const handleAssignmentClick = (assignment) => {
+    if (selectedStudentId) {
+      navigate(`/student/${selectedStudentId}/viewCourse/${assignment.courseId}`);
+    }
+  };
 
   return (
     <>
@@ -45,8 +55,34 @@ const StudentAssignmentsTable = ({ courses }) => {
               </TableRow>
             ) : (
               sortedAssignments.map((assignment) => (
-                <TableRow key={assignment.id}>
-                  <TableCell>{assignment.courseName}</TableCell>
+                <TableRow
+                  key={assignment.id}
+                  onClick={() => handleAssignmentClick(assignment)}
+                  sx={{
+                    cursor: "pointer",
+                    transition: "all 0.2s ease-in-out",
+                    "&:hover": {
+                      backgroundColor: "rgba(25, 118, 210, 0.08)",
+                      transform: "translateY(-1px)",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                    },
+                    "&:active": {
+                      transform: "translateY(0px)",
+                      backgroundColor: "rgba(25, 118, 210, 0.12)",
+                    },
+                  }}
+                >
+                  <TableCell
+                    sx={{
+                      fontWeight: "500",
+                      color: "primary.main",
+                      "&:hover": {
+                        textDecoration: "underline",
+                      },
+                    }}
+                  >
+                    {assignment.courseName}
+                  </TableCell>
                   <TableCell>{assignment.title}</TableCell>
                   <TableCell>{assignment.dueDate}</TableCell>
                   <TableCell
@@ -70,6 +106,10 @@ const StudentAssignmentsTable = ({ courses }) => {
         sx={{ mt: 1, display: "block", textAlign: "center" }}
       >
         המטלות מסודרות לפי תאריך הגשה (הקרובות ביותר בראש הטבלה)
+        <br />
+        <Typography variant="caption" color="primary.main">
+          לחץ על שורה כדי לעבור לקורס המתאים
+        </Typography>
       </Typography>
     </>
   );
