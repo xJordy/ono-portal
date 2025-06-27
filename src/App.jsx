@@ -20,6 +20,12 @@ function App() {
 
           {/* Keep student portal accessible via its path */}
           <Route path="/student/*" element={<StudentPortal />} />
+          <Route path="/student/:studentId" element={<StudentPortal />} />
+          <Route path="/student/:studentId/:page" element={<StudentPortal />} />
+          <Route
+            path="/student/:studentId/:page/:courseId"
+            element={<StudentPortal />}
+          />
           <Route path="/guide" element={<UserGuide />} />
         </Routes>
       </Container>

@@ -1,11 +1,19 @@
 import { useState, useEffect } from "react";
-import { Box, Typography, FormControl, InputLabel, Select, MenuItem } from "@mui/material";
+import {
+  Box,
+  Typography,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+} from "@mui/material";
+import { useParams, useNavigate, useLocation } from "react-router-dom"; // Add this import
 import Sidebar from "../common/shared/Sidebar";
 import DashboardCards from "../common/shared/DashboardCards";
 import CourseTable from "../common/shared/CourseTable";
 import StudentCourseView from "./StudentCourseView";
 import StudentAssignmentsTable from "./StudentAssignmentsTable";
-import { studentService, courseService } from "../../firebase"; // Import Firebase services
+import { studentService, courseService } from "../../firebase";
 import Loading from "../common/shared/Loading";
 
 // Import icons
@@ -14,6 +22,11 @@ import MenuBookIcon from "@mui/icons-material/MenuBook";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 
 export default function StudentPortal() {
+  // Get URL parameters
+  const { studentId, page, courseId } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [currentPage, setCurrentPage] = useState("dashboard");
   const [selectedStudentId, setSelectedStudentId] = useState("");
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -36,19 +49,32 @@ export default function StudentPortal() {
     const loadInitialData = async () => {
       try {
         setLoading(true);
-        
+
         // Load all students and courses in parallel
         const [studentsData, coursesData] = await Promise.all([
           studentService.getAll(),
-          courseService.getAll()
+          courseService.getAll(),
         ]);
 
         setAllStudents(studentsData);
         setAllCourses(coursesData);
-        
-        // If there are students, automatically select the first one
-        if (studentsData.length > 0) {
-          setSelectedStudentId(studentsData[0].id);
+
+        // Set initial student based on URL params or first student
+        if (studentId && studentsData.find((s) => s.id === studentId)) {
+          setSelectedStudentId(studentId);
+        } else if (studentsData.length > 0) {
+          const firstStudentId = studentsData[0].id;
+          setSelectedStudentId(firstStudentId);
+          // Update URL to reflect the selected student
+          navigate(`/student/${firstStudentId}/dashboard`, { replace: true });
+        }
+
+        // Set initial page based on URL params
+        if (
+          page &&
+          ["dashboard", "courses", "assignments", "viewCourse"].includes(page)
+        ) {
+          setCurrentPage(page);
         }
       } catch (error) {
         console.error("Error loading initial data:", error);
@@ -58,7 +84,7 @@ export default function StudentPortal() {
     };
 
     loadInitialData();
-  }, []);
+  }, [studentId, page, navigate]);
 
   // Update student courses when student selection changes
   useEffect(() => {
@@ -71,17 +97,18 @@ export default function StudentPortal() {
 
       try {
         setLoadingStudentData(true);
-        
+
         // Find the selected student
-        const student = allStudents.find(s => s.id === selectedStudentId);
+        const student = allStudents.find((s) => s.id === selectedStudentId);
         setSelectedStudent(student);
 
         if (student) {
           // Filter courses to only those the student is enrolled in
-          const enrolledCourses = allCourses.filter(course => 
-            course.studentIds && course.studentIds.includes(student.id)
+          const enrolledCourses = allCourses.filter(
+            (course) =>
+              course.studentIds && course.studentIds.includes(student.id)
           );
-          
+
           // Load full course data with assignments and messages
           const coursesWithData = await Promise.all(
             enrolledCourses.map(async (course) => {
@@ -95,6 +122,19 @@ export default function StudentPortal() {
           );
 
           setStudentCourses(coursesWithData);
+
+          // If we have a course ID in URL params and we're viewing a course, set the selected course
+          if (courseId && currentPage === "viewCourse") {
+            const course = coursesWithData.find((c) => c.id === courseId);
+            if (course) {
+              setSelectedCourse(course);
+            } else {
+              // Course not found or student not enrolled, redirect to courses
+              navigate(`/student/${selectedStudentId}/courses`, {
+                replace: true,
+              });
+            }
+          }
         }
       } catch (error) {
         console.error("Error loading student data:", error);
@@ -105,14 +145,24 @@ export default function StudentPortal() {
     };
 
     loadStudentData();
-  }, [selectedStudentId, allStudents, allCourses]);
+  }, [
+    selectedStudentId,
+    allStudents,
+    allCourses,
+    courseId,
+    currentPage,
+    navigate,
+  ]);
 
   // Handler for student selection change
   const handleStudentChange = (event) => {
-    setSelectedStudentId(event.target.value);
+    const newStudentId = event.target.value;
+    setSelectedStudentId(newStudentId);
     // Reset selected course when changing students
     setSelectedCourse(null);
-    setCurrentPage("dashboard"); // Go back to dashboard when changing students
+    setCurrentPage("dashboard");
+    // Update URL with new student and reset to dashboard
+    navigate(`/student/${newStudentId}/dashboard`, { replace: true });
   };
 
   // Handler for navigating between pages
@@ -120,6 +170,8 @@ export default function StudentPortal() {
     setCurrentPage(pageId);
     if (pageId !== "viewCourse") {
       setSelectedCourse(null);
+      // Update URL with new page
+      navigate(`/student/${selectedStudentId}/${pageId}`);
     }
   };
 
@@ -127,6 +179,16 @@ export default function StudentPortal() {
   const handleViewCourse = (course) => {
     setSelectedCourse(course);
     setCurrentPage("viewCourse");
+    // Update URL to include course ID
+    navigate(`/student/${selectedStudentId}/viewCourse/${course.id}`);
+  };
+
+  // Handler for going back from course view
+  const handleBackFromCourse = () => {
+    setCurrentPage("courses");
+    setSelectedCourse(null);
+    // Update URL to go back to courses
+    navigate(`/student/${selectedStudentId}/courses`);
   };
 
   // Render appropriate content based on current page
@@ -155,7 +217,7 @@ export default function StudentPortal() {
             <DashboardCards courses={studentCourses} userRole="student" />
           </Box>
         );
-      
+
       case "courses":
         return (
           <Box>
@@ -183,7 +245,7 @@ export default function StudentPortal() {
             )}
           </Box>
         );
-      
+
       case "assignments":
         return (
           <Box>
@@ -199,15 +261,15 @@ export default function StudentPortal() {
             )}
           </Box>
         );
-      
+
       case "viewCourse":
         return (
           <StudentCourseView
             course={selectedCourse}
-            onBack={() => setCurrentPage("courses")}
+            onBack={handleBackFromCourse}
           />
         );
-      
+
       default:
         return null;
     }
@@ -223,7 +285,7 @@ export default function StudentPortal() {
         <Typography variant="h4" sx={{ m: 0 }}>
           פורטל הסטודנט
         </Typography>
-        
+
         {/* Student Selection Dropdown */}
         <FormControl sx={{ minWidth: 250 }}>
           <InputLabel id="student-select-label">בחר סטודנט</InputLabel>
@@ -236,9 +298,7 @@ export default function StudentPortal() {
             disabled={allStudents.length === 0}
           >
             {allStudents.length === 0 ? (
-              <MenuItem disabled>
-                אין סטודנטים במערכת
-              </MenuItem>
+              <MenuItem disabled>אין סטודנטים במערכת</MenuItem>
             ) : (
               allStudents.map((student) => (
                 <MenuItem key={student.id} value={student.id}>
@@ -248,6 +308,26 @@ export default function StudentPortal() {
             )}
           </Select>
         </FormControl>
+
+        {/* Breadcrumb Navigation */}
+        {selectedStudent && (
+          <Box sx={{ ml: 2, display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography variant="body2" color="text.secondary">
+              {selectedStudent.firstName} {selectedStudent.lastName}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              ←
+            </Typography>
+            <Typography variant="body2" color="primary.main">
+              {currentPage === "dashboard" && "לוח בקרה"}
+              {currentPage === "courses" && "הקורסים שלי"}
+              {currentPage === "assignments" && "כל המטלות"}
+              {currentPage === "viewCourse" &&
+                selectedCourse &&
+                `צפיה בקורס: ${selectedCourse.name}`}
+            </Typography>
+          </Box>
+        )}
       </Box>
 
       <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" } }}>
@@ -269,9 +349,7 @@ export default function StudentPortal() {
         </Box>
 
         {/* Main content area */}
-        <Box sx={{ flexGrow: 1 }}>
-          {renderContent()}
-        </Box>
+        <Box sx={{ flexGrow: 1 }}>{renderContent()}</Box>
       </Box>
     </Box>
   );
